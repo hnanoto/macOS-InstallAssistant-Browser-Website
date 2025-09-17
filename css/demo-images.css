@@ -1,0 +1,84 @@
+/* Demo Images Styles */
+.demo-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.demo-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.demo-image:hover {
+    transform: scale(1.02);
+}
+
+/* Efeitos específicos para cada demo */
+#demo-interface .demo-image-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#demo-downloads .demo-image-container {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+#demo-serial .demo-image-container {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Overlay para interatividade */
+.demo-image-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.demo-image-container:hover::before {
+    opacity: 1;
+}
+
+/* Indicador de demo ativo */
+.demo-panel.active .demo-image-container {
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    }
+}
+
+/* Responsividade para imagens demo */
+@media (max-width: 768px) {
+    .demo-image-container {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .demo-panel {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .demo-image-container {
+        padding: 10px;
+    }
+}
