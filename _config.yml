@@ -1,0 +1,38 @@
+# GitHub Pages Configuration
+title: macOS InstallAssistant Browser
+description: A ferramenta definitiva para download e instalação de versões do macOS
+url: "https://hnanoto.github.io"
+baseurl: "/macOS-InstallAssistant-Browser-Website"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - README.md
+  - .gitignore
+  - .github/
+
+# Include files
+include:
+  - _pages
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
