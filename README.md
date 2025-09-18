@@ -118,6 +118,18 @@ Após realizar o pagamento via PIX, o aplicativo mostrará uma opção para "Env
 ### E se eu tiver problemas técnicos?
 Oferecemos suporte técnico completo por email. Entre em contato conosco e responderemos em até 24 horas.
 
+## 🔒 Segurança SLSA
+
+Este projeto utiliza SLSA (Supply-chain Levels for Software Artifacts) para garantir a autenticidade e integridade dos releases:
+
+- ✅ **Certificados de proveniência** para cada release
+- ✅ **Verificação automática** de integridade
+- ✅ **Proteção contra falsificação** de arquivos
+- ✅ **Badge "Verified"** no GitHub
+- ✅ **Rastreabilidade completa** do processo de build
+
+Para mais informações, consulte [SLSA_SECURITY.md](SLSA_SECURITY.md).
+
 ## 🔄 Atualizações
 
 ### Versão 1.0.0 (17 de Setembro de 2025)
@@ -127,6 +139,7 @@ Oferecemos suporte técnico completo por email. Entre em contato conosco e respo
 - ✅ Sistema de licenciamento seguro
 - ✅ Verificação de integridade
 - ✅ Suporte técnico completo
+- ✅ Segurança SLSA implementada
 
 ### Próximas Versões
 - 🔄 Suporte a mais versões do macOS
