@@ -294,10 +294,16 @@
             submitBtn.textContent = '📤 Enviando...';
             
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+                
                 const response = await fetch('/api/upload-payment-proof', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 const result = await response.json();
                 
@@ -311,7 +317,11 @@
                     showStatus('error', `❌ Erro: ${result.error || 'Erro desconhecido'}`);
                 }
             } catch (error) {
-                showStatus('error', `❌ Erro de conexão: ${error.message}`);
+                if (error.name === 'AbortError') {
+                    showStatus('error', '❌ Timeout: O upload está demorando muito. Tente novamente.');
+                } else {
+                    showStatus('error', `❌ Erro de conexão: ${error.message}`);
+                }
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = '📤 Enviar Comprovante';
