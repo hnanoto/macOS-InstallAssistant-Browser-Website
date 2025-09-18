@@ -773,6 +773,19 @@ def health_check():
         'version': '1.0.0'
     })
 
+@app.route('/api/debug/smtp', methods=['GET'])
+def debug_smtp():
+    """Debug SMTP configuration"""
+    smtp_config = {
+        'smtp_server': SMTP_SERVER,
+        'smtp_port': SMTP_PORT,
+        'smtp_username': SMTP_USERNAME,
+        'smtp_password_set': bool(SMTP_PASSWORD and SMTP_PASSWORD != 'your_app_password_here'),
+        'from_email': FROM_EMAIL,
+        'password_length': len(SMTP_PASSWORD) if SMTP_PASSWORD else 0
+    }
+    return jsonify(smtp_config)
+
 @app.route('/api/swift/process-purchase', methods=['POST'])
 def swift_process_purchase():
     """Process purchase from Swift app"""
