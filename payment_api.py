@@ -786,6 +786,36 @@ def debug_smtp():
     }
     return jsonify(smtp_config)
 
+@app.route('/api/debug/test-email', methods=['POST'])
+def test_email():
+    """Test email sending"""
+    try:
+        data = request.get_json()
+        test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
+        
+        # Test sending a simple email
+        result = EmailService.send_proof_pending_notification(
+            test_email,
+            'Teste Admin',
+            'test_payment_123',
+            'pix',
+            26.50,
+            'BRL',
+            'test_file.png'
+        )
+        
+        return jsonify({
+            'success': result,
+            'message': 'Email de teste enviado' if result else 'Falha ao enviar email',
+            'test_email': test_email
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/swift/process-purchase', methods=['POST'])
 def swift_process_purchase():
     """Process purchase from Swift app"""
