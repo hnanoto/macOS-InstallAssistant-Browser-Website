@@ -793,24 +793,43 @@ def test_email():
         data = request.get_json()
         test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
         
-        # Test sending a simple email
-        result = EmailService.send_proof_pending_notification(
-            test_email,
-            'Teste Admin',
-            'test_payment_123',
-            'pix',
-            26.50,
-            'BRL',
-            'test_file.png'
-        )
-        
-        return jsonify({
-            'success': result,
-            'message': 'Email de teste enviado' if result else 'Falha ao enviar email',
-            'test_email': test_email
-        })
+        # Test simple SMTP connection
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            
+            msg = MIMEText('Teste de email do sistema de pagamentos')
+            msg['Subject'] = 'Teste SMTP - macOS InstallAssistant Browser'
+            msg['From'] = FROM_EMAIL
+            msg['To'] = test_email
+            
+            print(f"🔄 Testando conexão SMTP...")
+            print(f"📧 Servidor: {SMTP_SERVER}:{SMTP_PORT}")
+            print(f"👤 Usuário: {SMTP_USERNAME}")
+            print(f"🔐 Senha configurada: {bool(SMTP_PASSWORD and SMTP_PASSWORD != 'your_app_password_here')}")
+            
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+            
+            print(f"✅ Email de teste enviado com sucesso!")
+            return jsonify({
+                'success': True,
+                'message': 'Email de teste enviado com sucesso',
+                'test_email': test_email
+            })
+            
+        except Exception as smtp_error:
+            print(f"❌ Erro SMTP: {smtp_error}")
+            return jsonify({
+                'success': False,
+                'error': f'Erro SMTP: {str(smtp_error)}',
+                'test_email': test_email
+            })
         
     except Exception as e:
+        print(f"❌ Erro geral: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
