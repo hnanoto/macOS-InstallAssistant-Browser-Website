@@ -43,12 +43,14 @@ O macOS InstallAssistant Browser é uma ferramenta profissional desenvolvida par
 1. **GitHub Releases**: [Baixar do GitHub](https://github.com/hnanoto/macOS-InstallAssistant-Browser-Website/releases)
 2. **Download Direto**: [Download Direto](releases/v1.0/macOS-InstallAssistant-Browser.dmg)
 
-### Como Instalar
+### Como Instalar e Ativar
 1. Baixe o arquivo DMG usando um dos links acima
 2. Execute o arquivo DMG baixado
 3. Arraste o aplicativo para a pasta Applications
-4. Abra o aplicativo e insira sua licença
-5. Comece a usar imediatamente!
+4. Abra o aplicativo e escolha sua forma de pagamento
+5. **Para PIX:** Após o pagamento, envie o comprovante através do app
+6. **Para PayPal/Cartão:** A ativação é automática
+7. Receba sua licença por email e comece a usar!
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -102,13 +104,16 @@ O macOS InstallAssistant Browser é uma ferramenta profissional desenvolvida par
 Sim, o aplicativo requer uma licença válida para funcionar. A licença individual custa R$ 26,50 e inclui 1 ano de atualizações gratuitas.
 
 ### Como funciona o sistema de pagamento?
-Aceitamos PIX, PayPal e cartão de crédito. Após o pagamento, você receberá um email com sua licença e instruções de ativação.
+Aceitamos PIX, PayPal e cartão de crédito. Para pagamentos via PIX, após realizar o pagamento, você precisará enviar o comprovante através do aplicativo. Após a verificação, você receberá um email com sua licença e instruções de ativação.
 
 ### O aplicativo é seguro?
 Sim, o aplicativo é completamente seguro. Todos os downloads são verificados quanto à integridade e vêm diretamente dos servidores da Apple.
 
 ### Posso usar em múltiplos dispositivos?
 Sim, cada licença permite uso em até 3 dispositivos Mac diferentes.
+
+### Como envio o comprovante de pagamento PIX?
+Após realizar o pagamento via PIX, o aplicativo mostrará uma opção para "Enviar Comprovante". Clique nessa opção e faça o upload da imagem do comprovante. Nossa equipe verificará o pagamento e enviará sua licença por email.
 
 ### E se eu tiver problemas técnicos?
 Oferecemos suporte técnico completo por email. Entre em contato conosco e responderemos em até 24 horas.
