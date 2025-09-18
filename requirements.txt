@@ -1,0 +1,34 @@
+# Payment API Dependencies
+Flask==2.3.3
+Flask-CORS==4.0.0
+stripe==6.7.0
+requests==2.31.0
+Werkzeug==2.3.7
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+click==8.1.7
+itsdangerous==2.1.2
+blinker==1.6.3
+certifi==2023.7.22
+charset-normalizer==3.3.0
+idna==3.4
+urllib3==2.0.7
+
+# Optional: For production deployment
+gunicorn==21.2.0
+
+# Optional: For database support (if needed later)
+# SQLAlchemy==2.0.23
+# Flask-SQLAlchemy==3.1.1
+
+# Optional: For environment variable management
+python-dotenv==1.0.0
+
+# Optional: For logging
+coloredlogs==15.0.1
+
+# Optional: For email templates
+premailer==3.10.0
+
+# Optional: For better error handling
+sentry-sdk[flask]==1.38.0
