@@ -975,16 +975,23 @@ def upload_payment_proof():
         print(f"👤 Enviado por: {email}")
         print(f"📁 Arquivo: {filename}")
         
-        # Send notification to admin about pending approval
-        EmailService.send_proof_pending_notification(
-            email,
-            payment.get('name', 'Cliente'),
-            payment_id,
-            payment['method'],
-            payment['amount'],
-            payment['currency'],
-            filename
-        )
+        # Send notification to admin about pending approval (async)
+        import threading
+        def send_notification_async():
+            EmailService.send_proof_pending_notification(
+                email,
+                payment.get('name', 'Cliente'),
+                payment_id,
+                payment['method'],
+                payment['amount'],
+                payment['currency'],
+                filename
+            )
+        
+        # Start notification in background thread
+        notification_thread = threading.Thread(target=send_notification_async)
+        notification_thread.daemon = True
+        notification_thread.start()
         
         return jsonify({
             'success': True,
@@ -1026,24 +1033,32 @@ def approve_payment():
             if email:
                 payment['serial'] = PaymentProcessor.generate_serial(email)
                 
-                # Send email to customer
-                EmailService.send_serial_email(
-                    email,
-                    payment.get('name', 'Cliente'),
-                    payment['serial'],
-                    payment_id
-                )
+                # Send emails asynchronously
+                import threading
+                def send_emails_async():
+                    # Send email to customer
+                    EmailService.send_serial_email(
+                        email,
+                        payment.get('name', 'Cliente'),
+                        payment['serial'],
+                        payment_id
+                    )
+                    
+                    # Send notification to admin
+                    EmailService.send_admin_notification(
+                        email,
+                        payment.get('name', 'Cliente'),
+                        payment['serial'],
+                        payment_id,
+                        payment['method'],
+                        payment['amount'],
+                        payment['currency']
+                    )
                 
-                # Send notification to admin
-                EmailService.send_admin_notification(
-                    email,
-                    payment.get('name', 'Cliente'),
-                    payment['serial'],
-                    payment_id,
-                    payment['method'],
-                    payment['amount'],
-                    payment['currency']
-                )
+                # Start email sending in background thread
+                email_thread = threading.Thread(target=send_emails_async)
+                email_thread.daemon = True
+                email_thread.start()
             
             print(f"✅ Pagamento aprovado: {payment_id}")
             
