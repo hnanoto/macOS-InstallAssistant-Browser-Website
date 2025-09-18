@@ -557,13 +557,13 @@ class EmailService:
                             <h3>🔗 Acesso Rápido ao Painel Admin</h3>
                             <p><strong>Para verificar o comprovante e aprovar este pagamento:</strong></p>
                             <p style="margin: 15px 0;">
-                                <a href="http://localhost:5001/admin" 
+                                <a href="https://web-production-1513a.up.railway.app/admin" 
                                    style="background: #2196f3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
                                     🛡️ Abrir Painel Admin
                                 </a>
                             </p>
                             <p style="font-size: 14px; color: #666; margin-top: 10px;">
-                                <strong>URL:</strong> <a href="http://localhost:5001/admin">http://localhost:5001/admin</a>
+                                <strong>URL:</strong> <a href="https://web-production-1513a.up.railway.app/admin">https://web-production-1513a.up.railway.app/admin</a>
                             </p>
                         </div>
                         
@@ -1018,9 +1018,8 @@ def upload_payment_proof():
         print(f"👤 Enviado por: {email}")
         print(f"📁 Arquivo: {filename}")
         
-        # Send notification to admin about pending approval (async)
-        import threading
-        def send_notification_async():
+        # Send notification to admin about pending approval (sync for now)
+        try:
             EmailService.send_proof_pending_notification(
                 email,
                 payment.get('name', 'Cliente'),
@@ -1030,11 +1029,9 @@ def upload_payment_proof():
                 payment['currency'],
                 filename
             )
-        
-        # Start notification in background thread
-        notification_thread = threading.Thread(target=send_notification_async)
-        notification_thread.daemon = True
-        notification_thread.start()
+            print(f"✅ Notificação de comprovante enviada para admin")
+        except Exception as e:
+            print(f"❌ Erro ao enviar notificação: {e}")
         
         return jsonify({
             'success': True,
