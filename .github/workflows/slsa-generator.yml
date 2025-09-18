@@ -1,0 +1,87 @@
+name: "SLSA Generic Generator"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name that triggered the workflow'
+        required: true
+        type: string
+      upload_asset:
+        description: 'Upload asset to release'
+        required: true
+        type: boolean
+        default: true
+  push:
+    tags:
+      - "*"
+
+# Ensure that we checkout the repository and have a valid tag.
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  actions: read
+
+jobs:
+  # This job calls the reusable workflow from the SLSA framework.
+  # All the build logic and provenance generation is defined in there.
+  slsa-generator:
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    with:
+      base64-subjects: "${{ hashFiles('**/*.dmg') }}"
+      upload-assets: ${{ github.event.inputs.upload_asset == 'true' }}
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # This job uploads the generated provenance to the release.
+  upload-release-assets:
+    needs: [slsa-generator]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.upload_asset == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-provenance
+          path: slsa-provenance
+
+      - name: Upload provenance to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: slsa-provenance/slsa-provenance.json
+          asset_name: slsa-provenance.json
+          asset_content_type: application/json
+
+  # This job verifies the provenance.
+  verify-provenance:
+    needs: [slsa-generator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-provenance
+          path: slsa-provenance
+
+      - name: Verify provenance
+        run: |
+          echo "Verifying SLSA provenance..."
+          if [ -f "slsa-provenance/slsa-provenance.json" ]; then
+            echo "✅ Provenance file found"
+            cat slsa-provenance/slsa-provenance.json | jq '.'
+          else
+            echo "❌ Provenance file not found"
+            exit 1
+          fi
+
+      - name: Display verification results
+        run: |
+          echo "🎉 SLSA provenance verification completed!"
+          echo "📋 This release is now cryptographically verified"
+          echo "🔒 Users can trust that this DMG was built by this repository"

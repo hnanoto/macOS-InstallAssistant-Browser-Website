@@ -1,0 +1,124 @@
+# GitHub Pages Configuration
+title: "macOS InstallAssistant Browser"
+description: "A ferramenta definitiva para download e instalação de versões do macOS"
+author: "Henrique"
+email: "hackintoshandbeyond@gmail.com"
+url: "https://hnanoto.github.io"
+baseurl: "/macOS-InstallAssistant-Browser-Website"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# SEO
+seo:
+  type: "Website"
+  locale: "pt_BR"
+  site_name: "macOS InstallAssistant Browser"
+  description: "A ferramenta definitiva para download e instalação de versões do macOS. Interface intuitiva, downloads automáticos e sistema de licenciamento seguro."
+  keywords: "macOS, InstallAssistant, Browser, download, instalação, Apple, Mac, sistema operacional"
+  author: "Henrique"
+  twitter:
+    username: "@hnanoto"
+    card: "summary_large_image"
+  og:
+    image: "/images/og-image.png"
+    type: "website"
+
+# Navigation
+navigation:
+  - title: "Recursos"
+    url: "#features"
+  - title: "Preços"
+    url: "#pricing"
+  - title: "Download"
+    url: "#download"
+  - title: "Suporte"
+    url: "#support"
+
+# Social links
+social:
+  - name: "GitHub"
+    url: "https://github.com/hnanoto"
+  - name: "Email"
+    url: "mailto:hackintoshandbeyond@gmail.com"
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .gitignore
+  - .DS_Store
+  - Thumbs.db
+
+# Include files
+include:
+  - _redirects
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "doc"
+
+# Sass
+sass:
+  sass_dir: _sass
+  style: compressed
+
+# Timezone
+timezone: "America/Sao_Paulo"
+
+# Language
+lang: "pt-BR"
+
+# Analytics (add your tracking ID)
+google_analytics: ""
+
+# Comments (add your Disqus shortname)
+disqus:
+  shortname: ""
+
+# Pagination
+paginate: 10
+paginate_path: "/page:num/"
+
+# Feed
+feed:
+  posts_limit: 10
+  collections_limit: 10
+
+# Sitemap
+sitemap:
+  changefreq: "weekly"
+  priority: 0.5
+  lastmod: "2025-09-18"
