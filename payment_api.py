@@ -1303,63 +1303,71 @@ def upload_payment_proof():
         # Log upload (simplified for speed)
         print(f"📋 Upload: {payment_id} - {email} - {filename}")
         
-        # Send notification to admin about pending approval (synchronous to ensure it works)
-        try:
-            # Try to send email
-            email_sent = EmailService.send_proof_pending_notification(
-                email,
-                payment.get('name', 'Cliente'),
-                payment_id,
-                payment['method'],
-                payment['amount'],
-                payment['currency'],
-                filename,
-                is_old_payment
-            )
-            
-            if email_sent:
-                print(f"✅ Notificação de comprovante enviada para admin")
-            else:
-                # If email fails, save notification to file
-                notification_data = {
-                    'type': 'proof_uploaded',
-                    'payment_id': payment_id,
-                    'email': email,
-                    'name': payment.get('name', 'Cliente'),
-                    'method': payment['method'],
-                    'amount': payment['amount'],
-                    'currency': payment['currency'],
-                    'filename': filename,
-                    'timestamp': datetime.now().isoformat()
-                }
+        # Send notification to admin about pending approval (asynchronous for speed)
+        import threading
+        
+        def send_notification_async():
+            try:
+                # Try to send email
+                email_sent = EmailService.send_proof_pending_notification(
+                    email,
+                    payment.get('name', 'Cliente'),
+                    payment_id,
+                    payment['method'],
+                    payment['amount'],
+                    payment['currency'],
+                    filename,
+                    is_old_payment
+                )
                 
+                if email_sent:
+                    print(f"✅ Notificação de comprovante enviada para admin")
+                else:
+                    # If email fails, save notification to file
+                    notification_data = {
+                        'type': 'proof_uploaded',
+                        'payment_id': payment_id,
+                        'email': email,
+                        'name': payment.get('name', 'Cliente'),
+                        'method': payment['method'],
+                        'amount': payment['amount'],
+                        'currency': payment['currency'],
+                        'filename': filename,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                    try:
+                        with open('notifications.json', 'a') as f:
+                            f.write(json.dumps(notification_data) + '\n')
+                        print(f"📝 Notificação salva para admin: {email} - {payment_id}")
+                    except Exception as save_error:
+                        print(f"❌ Erro ao salvar notificação: {save_error}")
+                        
+            except Exception as e:
+                print(f"❌ Erro ao enviar notificação: {e}")
+                # Always save notification as fallback
                 try:
+                    notification_data = {
+                        'type': 'proof_uploaded',
+                        'payment_id': payment_id,
+                        'email': email,
+                        'name': payment.get('name', 'Cliente'),
+                        'method': payment['method'],
+                        'amount': payment['amount'],
+                        'currency': payment['currency'],
+                        'filename': filename,
+                        'timestamp': datetime.now().isoformat()
+                    }
                     with open('notifications.json', 'a') as f:
                         f.write(json.dumps(notification_data) + '\n')
-                    print(f"📝 Notificação salva para admin: {email} - {payment_id}")
-                except Exception as save_error:
-                    print(f"❌ Erro ao salvar notificação: {save_error}")
-                    
-        except Exception as e:
-            print(f"❌ Erro ao enviar notificação: {e}")
-            # Always save notification as fallback
-            try:
-                notification_data = {
-                    'type': 'proof_uploaded',
-                    'payment_id': payment_id,
-                    'email': email,
-                    'name': payment.get('name', 'Cliente'),
-                    'method': payment['method'],
-                    'amount': payment['amount'],
-                    'currency': payment['currency'],
-                    'filename': filename,
-                    'timestamp': datetime.now().isoformat()
-                }
-                with open('notifications.json', 'a') as f:
-                    f.write(json.dumps(notification_data) + '\n')
-                print(f"📝 Notificação de fallback salva: {email} - {payment_id}")
-            except Exception as fallback_error:
-                print(f"❌ Erro no fallback de notificação: {fallback_error}")
+                    print(f"📝 Notificação de fallback salva: {email} - {payment_id}")
+                except Exception as fallback_error:
+                    print(f"❌ Erro no fallback de notificação: {fallback_error}")
+        
+        # Start notification in background thread
+        notification_thread = threading.Thread(target=send_notification_async)
+        notification_thread.daemon = True
+        notification_thread.start()
         
         # Return immediately to avoid timeout
         response_message = 'Comprovante enviado com sucesso. Aguarde aprovação.'
