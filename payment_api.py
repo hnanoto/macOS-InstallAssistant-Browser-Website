@@ -1185,7 +1185,7 @@ def swift_confirm_payment():
                     'error': 'Pagamento PIX requer aprovação manual. Envie o comprovante para aprovação.',
                     'status': 'pending_approval',
                     'requires_proof': True,
-                    'proof_upload_url': 'http://localhost:5001/upload-proof'
+                    'proof_upload_url': f'https://web-production-1513a.up.railway.app/upload-proof?payment_id={payment_id}'
                 }), 400
                 
         elif payment['method'] == 'paypal':
