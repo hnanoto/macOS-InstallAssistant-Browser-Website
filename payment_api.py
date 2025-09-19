@@ -102,11 +102,10 @@ def load_payments():
         payments_db = {}
 
 def save_payments():
-    """Save payments to file"""
+    """Save payments to file (optimized for speed)"""
     try:
         with open('payments.json', 'w') as f:
-            json.dump(payments_db, f, indent=2)
-        print(f"💾 Salvos {len(payments_db)} pagamentos no arquivo")
+            json.dump(payments_db, f, separators=(',', ':'))  # Compact format for speed
     except Exception as e:
         print(f"❌ Erro ao salvar pagamentos: {e}")
 
@@ -1219,18 +1218,13 @@ def upload_payment_proof():
         if file.filename == '':
             return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
         
-        # Check if payment exists
-        print(f"🔍 Procurando pagamento: {payment_id}")
-        print(f"📋 Pagamentos disponíveis: {list(payments_db.keys())}")
-        
+        # Check if payment exists (optimized for speed)
         payment = None
         is_old_payment = False
         
         if payment_id in payments_db:
             payment = payments_db[payment_id]
-            print(f"✅ Pagamento encontrado no banco atual")
         else:
-            print(f"⚠️ Pagamento não encontrado no banco atual - pode ser um pagamento antigo")
             # Create a new payment record for old payments
             payment = {
                 'id': payment_id,
@@ -1246,7 +1240,6 @@ def upload_payment_proof():
             }
             payments_db[payment_id] = payment
             is_old_payment = True
-            print(f"📝 Criado registro para pagamento antigo: {payment_id}")
         
         # Only allow PIX payments
         if payment['method'] != 'pix':
@@ -1264,15 +1257,8 @@ def upload_payment_proof():
         payment['proof_filename'] = filename
         save_payments()
         
-        if is_old_payment:
-            print(f"📋 Comprovante enviado para PAGAMENTO ANTIGO: {payment_id}")
-            print(f"👤 Enviado por: {email}")
-            print(f"📁 Arquivo: {filename}")
-            print(f"⚠️ ATENÇÃO: Este é um pagamento antigo que não estava no banco de dados")
-        else:
-            print(f"📋 Comprovante enviado para pagamento: {payment_id}")
-            print(f"👤 Enviado por: {email}")
-            print(f"📁 Arquivo: {filename}")
+        # Log upload (simplified for speed)
+        print(f"📋 Upload: {payment_id} - {email} - {filename}")
         
         # Send notification to admin about pending approval (async to avoid timeout)
         import threading

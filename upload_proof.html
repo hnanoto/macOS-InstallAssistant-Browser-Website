@@ -293,9 +293,12 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '📤 Enviando...';
             
+            // Show progress message
+            showStatus('info', '📤 Enviando comprovante... Isso pode levar alguns segundos.');
+            
             try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds timeout
                 
                 const response = await fetch('/api/upload-payment-proof', {
                     method: 'POST',
