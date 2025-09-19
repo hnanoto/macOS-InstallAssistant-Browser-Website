@@ -54,14 +54,14 @@ if IS_RAILWAY:
     SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
     SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
     SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'hackintoshandbeyond@gmail.com')
-    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'your_app_password_here')
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'pvqd jzvt sjyz azwn')
     FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
 else:
     # Local configuration
     SMTP_SERVER = 'smtp.gmail.com'
     SMTP_PORT = 587
     SMTP_USERNAME = 'hackintoshandbeyond@gmail.com'
-    SMTP_PASSWORD = 'your_app_password_here'  # Will be loaded from .env
+    SMTP_PASSWORD = 'pvqd jzvt sjyz azwn'  # App Password
     FROM_EMAIL = 'hackintoshandbeyond@gmail.com'
 
 # PIX Configuration
