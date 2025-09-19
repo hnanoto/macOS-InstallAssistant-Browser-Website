@@ -48,7 +48,7 @@ PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 
 # Email configuration
 SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+SMTP_PORT = int(os.getenv('SMTP_PORT', '465'))  # Changed to 465 for SSL
 SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
@@ -344,12 +344,21 @@ class EmailService:
             
             # Send email
             print(f"📤 Conectando ao servidor SMTP...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                print(f"📨 Enviando email para: {email}")
-                server.send_message(msg)
+            if SMTP_PORT == 465:
+                # Use SSL for port 465
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                    print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando email para: {email}")
+                    server.send_message(msg)
+            else:
+                # Use TLS for port 587
+                with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                    server.starttls()
+                    print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando email para: {email}")
+                    server.send_message(msg)
             
             print(f"✅ Email enviado com sucesso para: {email}")
             return True
@@ -469,12 +478,21 @@ class EmailService:
             
             # Send email
             print(f"📤 Conectando ao servidor SMTP para admin...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                print(f"🔐 Fazendo login admin com: {SMTP_USERNAME}")
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                print(f"📨 Enviando notificação admin para: {admin_email}")
-                server.send_message(msg)
+            if SMTP_PORT == 465:
+                # Use SSL for port 465
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                    print(f"🔐 Fazendo login admin com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando notificação admin para: {admin_email}")
+                    server.send_message(msg)
+            else:
+                # Use TLS for port 587
+                with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                    server.starttls()
+                    print(f"🔐 Fazendo login admin com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando notificação admin para: {admin_email}")
+                    server.send_message(msg)
             
             print(f"✅ Notificação admin enviada com sucesso para: {admin_email}")
             return True
@@ -599,12 +617,21 @@ class EmailService:
             
             # Send email
             print(f"📤 Conectando ao servidor SMTP para notificação pendente...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                print(f"📨 Enviando notificação pendente para: {admin_email}")
-                server.send_message(msg)
+            if SMTP_PORT == 465:
+                # Use SSL for port 465
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                    print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando notificação pendente para: {admin_email}")
+                    server.send_message(msg)
+            else:
+                # Use TLS for port 587
+                with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                    server.starttls()
+                    print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    print(f"📨 Enviando notificação pendente para: {admin_email}")
+                    server.send_message(msg)
             
             print(f"✅ Notificação de comprovante pendente enviada com sucesso para: {admin_email}")
             return True
@@ -808,10 +835,17 @@ def test_email():
             print(f"👤 Usuário: {SMTP_USERNAME}")
             print(f"🔐 Senha configurada: {bool(SMTP_PASSWORD and SMTP_PASSWORD != 'your_app_password_here')}")
             
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
+            if SMTP_PORT == 465:
+                # Use SSL for port 465
+                with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    server.send_message(msg)
+            else:
+                # Use TLS for port 587
+                with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                    server.starttls()
+                    server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                    server.send_message(msg)
             
             print(f"✅ Email de teste enviado com sucesso!")
             return jsonify({
