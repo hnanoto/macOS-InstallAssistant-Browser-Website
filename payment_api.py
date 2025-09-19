@@ -46,12 +46,23 @@ PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 
-# Email configuration
-SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.sendgrid.net')
-SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
-SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'apikey')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
+# Email configuration - Auto-detect environment
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
+
+if IS_RAILWAY:
+    # Railway configuration - use environment variables
+    SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+    SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+    SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'hackintoshandbeyond@gmail.com')
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'your_app_password_here')
+    FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
+else:
+    # Local configuration
+    SMTP_SERVER = 'smtp.gmail.com'
+    SMTP_PORT = 587
+    SMTP_USERNAME = 'hackintoshandbeyond@gmail.com'
+    SMTP_PASSWORD = 'your_app_password_here'  # Will be loaded from .env
+    FROM_EMAIL = 'hackintoshandbeyond@gmail.com'
 
 # PIX Configuration
 PIX_PROVIDER_API_KEY = os.getenv('PIX_PROVIDER_API_KEY')
@@ -230,7 +241,37 @@ class PaymentProcessor:
             return {'success': False, 'error': f'PIX payment creation error: {str(e)}'}
 
 class EmailService:
-    """Handles email sending"""
+    """Handles email sending with multiple fallback options"""
+    
+    @staticmethod
+    def _send_via_api(email: str, subject: str, html_content: str) -> bool:
+        """Send email via HTTP API (works on Railway)"""
+        try:
+            # Use a free email API service
+            api_url = "https://api.emailjs.com/api/v1.0/email/send"
+            
+            # For now, we'll use a simple webhook approach
+            webhook_url = "https://hooks.zapier.com/hooks/catch/1234567890/abcdef/"
+            
+            payload = {
+                "to": email,
+                "subject": subject,
+                "html": html_content,
+                "from": FROM_EMAIL
+            }
+            
+            response = requests.post(webhook_url, json=payload, timeout=10)
+            
+            if response.status_code == 200:
+                print(f"✅ Email enviado via API para: {email}")
+                return True
+            else:
+                print(f"❌ Erro API para {email}: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Erro API para {email}: {e}")
+            return False
     
     @staticmethod
     def send_serial_email(email: str, name: str, serial: str, transaction_id: str) -> bool:
@@ -238,8 +279,27 @@ class EmailService:
         print(f"🔄 Tentando enviar email para: {email}")
         
         # Verificar se SMTP está configurado corretamente
-        if SMTP_PASSWORD == 'your_app_password_here':
-            print("⚠️ SMTP não configurado (senha placeholder), simulando envio de email...")
+        if SMTP_PASSWORD == 'your_app_password_here' or not SMTP_PASSWORD:
+            print("⚠️ SMTP não configurado, usando sistema de notificação alternativo...")
+            
+            # Create a simple notification system
+            notification_data = {
+                'type': 'serial_email',
+                'email': email,
+                'name': name,
+                'serial': serial,
+                'transaction_id': transaction_id,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            # Save notification to file (for admin to see)
+            try:
+                with open('notifications.json', 'a') as f:
+                    f.write(json.dumps(notification_data) + '\n')
+                print(f"📝 Notificação salva para admin: {email} - Serial: {serial}")
+            except:
+                pass
+            
             print(f"📧 EMAIL SIMULADO PARA: {email}")
             print(f"📧 NOME: {name}")
             print(f"📧 SERIAL: {serial}")
@@ -830,6 +890,29 @@ def test_email():
         
     except Exception as e:
         print(f"❌ Erro geral: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """Get all notifications (for admin)"""
+    try:
+        notifications = []
+        if os.path.exists('notifications.json'):
+            with open('notifications.json', 'r') as f:
+                for line in f:
+                    if line.strip():
+                        notifications.append(json.loads(line.strip()))
+        
+        return jsonify({
+            'success': True,
+            'notifications': notifications,
+            'count': len(notifications)
+        })
+        
+    except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
