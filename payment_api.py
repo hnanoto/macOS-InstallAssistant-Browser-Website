@@ -574,7 +574,7 @@ class EmailService:
             return False
     
     @staticmethod
-    def send_proof_pending_notification(customer_email: str, customer_name: str, transaction_id: str, payment_method: str, amount: int, currency: str, filename: str) -> bool:
+    def send_proof_pending_notification(customer_email: str, customer_name: str, transaction_id: str, payment_method: str, amount: int, currency: str, filename: str, is_old_payment: bool = False) -> bool:
         """Send notification to admin about pending proof approval"""
         admin_email = "hackintoshandbeyond@gmail.com"
         print(f"🔄 Tentando enviar notificação de comprovante pendente para: {admin_email}")
@@ -593,7 +593,10 @@ class EmailService:
         
         try:
             # Create email content for admin
-            subject = f"🔔 Comprovante PIX Enviado - Aguardando Aprovação - {transaction_id}"
+            if is_old_payment:
+                subject = f"🔔 Comprovante PIX ANTIGO Enviado - Aguardando Aprovação - {transaction_id}"
+            else:
+                subject = f"🔔 Comprovante PIX Enviado - Aguardando Aprovação - {transaction_id}"
             
             # Convert amount from cents to currency
             if currency == 'USD':
@@ -629,6 +632,7 @@ class EmailService:
                         <div class="info-box urgent">
                             <h2>⚠️ AÇÃO NECESSÁRIA</h2>
                             <p><strong>Um cliente enviou o comprovante PIX e está aguardando sua aprovação.</strong></p>
+                            {f'<p style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;"><strong>⚠️ PAGAMENTO ANTIGO:</strong> Este é um comprovante de um pagamento que não estava no banco de dados atual. O cliente pode ter feito o pagamento há algum tempo.</p>' if is_old_payment else ''}
                         </div>
                         
                         <h2>Detalhes do Pagamento</h2>
@@ -983,13 +987,53 @@ def debug_send_notification():
             payment['method'],
             payment['amount'],
             payment['currency'],
-            payment.get('proof_filename', 'test_file.png')
+            payment.get('proof_filename', 'test_file.png'),
+            payment.get('is_old_payment', False)
         )
         
         return jsonify({
             'success': result,
             'message': 'Notificação enviada' if result else 'Falha ao enviar notificação',
             'payment_id': payment_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/debug/test-old-payment', methods=['POST'])
+def debug_test_old_payment():
+    """Debug endpoint to test old payment upload"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id', 'pix_old_20240101_120000_test')
+        email = data.get('email', 'test@example.com')
+        
+        # Create a fake old payment
+        old_payment = {
+            'id': payment_id,
+            'email': email,
+            'name': 'Cliente Teste',
+            'country': 'BR',
+            'amount': 2650,
+            'currency': 'BRL',
+            'method': 'pix',
+            'status': 'pending_approval',
+            'created_at': datetime.now().isoformat(),
+            'is_old_payment': True
+        }
+        
+        payments_db[payment_id] = old_payment
+        save_payments()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Pagamento antigo criado para teste: {payment_id}',
+            'payment_id': payment_id,
+            'email': email,
+            'is_old_payment': True
         })
         
     except Exception as e:
@@ -1159,7 +1203,7 @@ def swift_confirm_payment():
 
 @app.route('/api/upload-payment-proof', methods=['POST'])
 def upload_payment_proof():
-    """Upload payment proof for PIX payments"""
+    """Upload payment proof for PIX payments - SUPPORTS OLD PAYMENTS"""
     try:
         # Check if file was uploaded
         if 'file' not in request.files:
@@ -1179,11 +1223,30 @@ def upload_payment_proof():
         print(f"🔍 Procurando pagamento: {payment_id}")
         print(f"📋 Pagamentos disponíveis: {list(payments_db.keys())}")
         
-        if payment_id not in payments_db:
-            print(f"❌ Pagamento não encontrado: {payment_id}")
-            return jsonify({'error': 'Payment not found'}), 404
+        payment = None
+        is_old_payment = False
         
-        payment = payments_db[payment_id]
+        if payment_id in payments_db:
+            payment = payments_db[payment_id]
+            print(f"✅ Pagamento encontrado no banco atual")
+        else:
+            print(f"⚠️ Pagamento não encontrado no banco atual - pode ser um pagamento antigo")
+            # Create a new payment record for old payments
+            payment = {
+                'id': payment_id,
+                'email': email,
+                'name': request.form.get('name', 'Cliente'),
+                'country': 'BR',
+                'amount': 2650,  # R$ 26,50 in cents
+                'currency': 'BRL',
+                'method': 'pix',
+                'status': 'pending_approval',
+                'created_at': datetime.now().isoformat(),
+                'is_old_payment': True  # Flag to identify old payments
+            }
+            payments_db[payment_id] = payment
+            is_old_payment = True
+            print(f"📝 Criado registro para pagamento antigo: {payment_id}")
         
         # Only allow PIX payments
         if payment['method'] != 'pix':
@@ -1201,9 +1264,15 @@ def upload_payment_proof():
         payment['proof_filename'] = filename
         save_payments()
         
-        print(f"📋 Comprovante enviado para pagamento: {payment_id}")
-        print(f"👤 Enviado por: {email}")
-        print(f"📁 Arquivo: {filename}")
+        if is_old_payment:
+            print(f"📋 Comprovante enviado para PAGAMENTO ANTIGO: {payment_id}")
+            print(f"👤 Enviado por: {email}")
+            print(f"📁 Arquivo: {filename}")
+            print(f"⚠️ ATENÇÃO: Este é um pagamento antigo que não estava no banco de dados")
+        else:
+            print(f"📋 Comprovante enviado para pagamento: {payment_id}")
+            print(f"👤 Enviado por: {email}")
+            print(f"📁 Arquivo: {filename}")
         
         # Send notification to admin about pending approval (async to avoid timeout)
         import threading
@@ -1217,7 +1286,8 @@ def upload_payment_proof():
                     payment['method'],
                     payment['amount'],
                     payment['currency'],
-                    filename
+                    filename,
+                    is_old_payment
                 )
                 
                 if email_sent:
@@ -1252,12 +1322,17 @@ def upload_payment_proof():
         notification_thread.start()
         
         # Return immediately to avoid timeout
+        response_message = 'Comprovante enviado com sucesso. Aguarde aprovação.'
+        if is_old_payment:
+            response_message = 'Comprovante de pagamento antigo enviado com sucesso. Aguarde aprovação.'
+        
         return jsonify({
             'success': True,
-            'message': 'Comprovante enviado com sucesso. Aguarde aprovação.',
+            'message': response_message,
             'status': 'pending_approval',
             'filename': filename,
-            'payment_id': payment_id
+            'payment_id': payment_id,
+            'is_old_payment': is_old_payment
         })
         
     except Exception as e:
