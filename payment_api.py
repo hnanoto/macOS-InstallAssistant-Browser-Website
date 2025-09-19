@@ -1268,21 +1268,14 @@ def upload_payment_proof():
         if payment_id in payments_db:
             payment = payments_db[payment_id]
         else:
-            # Create a new payment record for old payments
-            payment = {
-                'id': payment_id,
-                'email': email,
-                'name': request.form.get('name', 'Cliente'),
-                'country': 'BR',
-                'amount': 2650,  # R$ 26,50 in cents
-                'currency': 'BRL',
-                'method': 'pix',
-                'status': 'pending_approval',
-                'created_at': datetime.now().isoformat(),
-                'is_old_payment': True  # Flag to identify old payments
-            }
-            payments_db[payment_id] = payment
-            is_old_payment = True
+            # Payment not found - return error instead of creating old payment
+            print(f"❌ ERRO: Payment ID não encontrado: {payment_id}")
+            print(f"📋 Payment IDs disponíveis: {list(payments_db.keys())}")
+            return jsonify({
+                'error': f'Payment ID "{payment_id}" não encontrado. Por favor, refaça o processo de compra.',
+                'success': False,
+                'payment_id': payment_id
+            }), 404
         
         # Only allow PIX payments
         if payment['method'] != 'pix':
