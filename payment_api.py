@@ -963,6 +963,41 @@ def debug_payments():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/send-notification', methods=['POST'])
+def debug_send_notification():
+    """Debug endpoint to send notification manually"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id', 'pix_20250919_005731_hnano')
+        
+        if payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        payment = payments_db[payment_id]
+        
+        # Send notification manually
+        result = EmailService.send_proof_pending_notification(
+            payment['email'],
+            payment.get('name', 'Cliente'),
+            payment_id,
+            payment['method'],
+            payment['amount'],
+            payment['currency'],
+            payment.get('proof_filename', 'test_file.png')
+        )
+        
+        return jsonify({
+            'success': result,
+            'message': 'Notificação enviada' if result else 'Falha ao enviar notificação',
+            'payment_id': payment_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/swift/process-purchase', methods=['POST'])
 def swift_process_purchase():
     """Process purchase from Swift app"""
