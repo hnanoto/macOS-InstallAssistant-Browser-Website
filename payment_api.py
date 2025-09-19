@@ -84,6 +84,34 @@ stripe.api_key = STRIPE_SECRET_KEY
 
 # In-memory storage for demo (use a proper database in production)
 payments_db = {}
+
+# Load payments from file on startup
+def load_payments():
+    """Load payments from file"""
+    global payments_db
+    try:
+        if os.path.exists('payments.json'):
+            with open('payments.json', 'r') as f:
+                payments_db = json.load(f)
+            print(f"📋 Carregados {len(payments_db)} pagamentos do arquivo")
+        else:
+            payments_db = {}
+            print("📋 Nenhum arquivo de pagamentos encontrado, iniciando vazio")
+    except Exception as e:
+        print(f"❌ Erro ao carregar pagamentos: {e}")
+        payments_db = {}
+
+def save_payments():
+    """Save payments to file"""
+    try:
+        with open('payments.json', 'w') as f:
+            json.dump(payments_db, f, indent=2)
+        print(f"💾 Salvos {len(payments_db)} pagamentos no arquivo")
+    except Exception as e:
+        print(f"❌ Erro ao salvar pagamentos: {e}")
+
+# Load payments on startup
+load_payments()
 serials_db = {}
 
 # Helper functions
@@ -228,6 +256,7 @@ class PaymentProcessor:
                 'pix_code': pix_code,
                 'created_at': datetime.now().isoformat()
             }
+            save_payments()
             
             return {
                 'success': True,
@@ -1135,6 +1164,7 @@ def upload_payment_proof():
         payment['proof_uploaded_at'] = datetime.now().isoformat()
         payment['proof_uploaded_by'] = email
         payment['proof_filename'] = filename
+        save_payments()
         
         print(f"📋 Comprovante enviado para pagamento: {payment_id}")
         print(f"👤 Enviado por: {email}")
