@@ -918,6 +918,22 @@ def get_notifications():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/payments', methods=['GET'])
+def debug_payments():
+    """Debug endpoint to see all payments"""
+    try:
+        return jsonify({
+            'success': True,
+            'payments': payments_db,
+            'count': len(payments_db)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/swift/process-purchase', methods=['POST'])
 def swift_process_purchase():
     """Process purchase from Swift app"""
@@ -1096,7 +1112,11 @@ def upload_payment_proof():
             return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
         
         # Check if payment exists
+        print(f"🔍 Procurando pagamento: {payment_id}")
+        print(f"📋 Pagamentos disponíveis: {list(payments_db.keys())}")
+        
         if payment_id not in payments_db:
+            print(f"❌ Pagamento não encontrado: {payment_id}")
             return jsonify({'error': 'Payment not found'}), 404
         
         payment = payments_db[payment_id]
