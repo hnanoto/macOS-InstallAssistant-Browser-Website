@@ -1041,6 +1041,49 @@ def debug_test_old_payment():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/test-notification', methods=['POST'])
+def debug_test_notification():
+    """Debug endpoint to test notification system"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id', 'pix_20250919_023821_hnano')
+        
+        # Test notification system directly
+        notification_data = {
+            'type': 'proof_uploaded',
+            'payment_id': payment_id,
+            'email': 'test@example.com',
+            'name': 'Cliente Teste',
+            'method': 'pix',
+            'amount': 2650,
+            'currency': 'BRL',
+            'filename': 'test_file.png',
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Try to save notification
+        try:
+            with open('notifications.json', 'a') as f:
+                f.write(json.dumps(notification_data) + '\n')
+            print(f"📝 Notificação de teste salva: {payment_id}")
+            return jsonify({
+                'success': True,
+                'message': 'Notificação de teste salva com sucesso',
+                'payment_id': payment_id
+            })
+        except Exception as save_error:
+            print(f"❌ Erro ao salvar notificação de teste: {save_error}")
+            return jsonify({
+                'success': False,
+                'error': f'Erro ao salvar: {str(save_error)}'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/swift/process-purchase', methods=['POST'])
 def swift_process_purchase():
     """Process purchase from Swift app"""
