@@ -1120,26 +1120,35 @@ def upload_payment_proof():
         print(f"👤 Enviado por: {email}")
         print(f"📁 Arquivo: {filename}")
         
-        # Send notification to admin about pending approval (sync for now)
-        try:
-            EmailService.send_proof_pending_notification(
-                email,
-                payment.get('name', 'Cliente'),
-                payment_id,
-                payment['method'],
-                payment['amount'],
-                payment['currency'],
-                filename
-            )
-            print(f"✅ Notificação de comprovante enviada para admin")
-        except Exception as e:
-            print(f"❌ Erro ao enviar notificação: {e}")
+        # Send notification to admin about pending approval (async to avoid timeout)
+        import threading
+        def send_notification_async():
+            try:
+                EmailService.send_proof_pending_notification(
+                    email,
+                    payment.get('name', 'Cliente'),
+                    payment_id,
+                    payment['method'],
+                    payment['amount'],
+                    payment['currency'],
+                    filename
+                )
+                print(f"✅ Notificação de comprovante enviada para admin")
+            except Exception as e:
+                print(f"❌ Erro ao enviar notificação: {e}")
         
+        # Start notification in background thread
+        notification_thread = threading.Thread(target=send_notification_async)
+        notification_thread.daemon = True
+        notification_thread.start()
+        
+        # Return immediately to avoid timeout
         return jsonify({
             'success': True,
             'message': 'Comprovante enviado com sucesso. Aguarde aprovação.',
             'status': 'pending_approval',
-            'filename': filename
+            'filename': filename,
+            'payment_id': payment_id
         })
         
     except Exception as e:
