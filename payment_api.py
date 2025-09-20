@@ -377,24 +377,14 @@ class EmailService:
             print("✅ Email simulado enviado com sucesso!")
             return True
         
-        # Try SendGrid first if available
-        if USE_SENDGRID:
-            print(f"📧 Tentando enviar via SendGrid para: {email}")
-            if EmailService._send_via_sendgrid(email, subject, html_content):
-                return True
-            print("⚠️ SendGrid falhou, tentando SMTP...")
-            
-        print(f"📧 SMTP Config: {SMTP_SERVER}:{SMTP_PORT}, User: {SMTP_USERNAME}")
+        # Create email content first
+        subject = "Sua Licença do macOS InstallAssistant Browser"
         
-        try:
-            # Create email content
-            subject = "Sua Licença do macOS InstallAssistant Browser"
-            
-            print(f"📧 Criando conteúdo do email para: {email}")
-            print(f"📧 Serial: {serial}")
-            print(f"📧 Transação: {transaction_id}")
-            
-            html_content = f"""
+        print(f"📧 Criando conteúdo do email para: {email}")
+        print(f"📧 Serial: {serial}")
+        print(f"📧 Transação: {transaction_id}")
+        
+        html_content = f"""
             <!DOCTYPE html>
             <html>
             <head>
@@ -472,7 +462,17 @@ class EmailService:
             </body>
             </html>
             """
+        
+        # Try SendGrid first if available
+        if USE_SENDGRID:
+            print(f"📧 Tentando enviar via SendGrid para: {email}")
+            if EmailService._send_via_sendgrid(email, subject, html_content):
+                return True
+            print("⚠️ SendGrid falhou, tentando SMTP...")
             
+        print(f"📧 SMTP Config: {SMTP_SERVER}:{SMTP_PORT}, User: {SMTP_USERNAME}")
+        
+        try:
             # Create message
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
