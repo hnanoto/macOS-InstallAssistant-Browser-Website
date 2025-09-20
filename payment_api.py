@@ -981,7 +981,42 @@ def test_email():
         data = request.get_json()
         test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
         
-        # Test simple SMTP connection
+        # Test SendGrid first if available
+        if USE_SENDGRID:
+            print(f"📧 Tentando SendGrid primeiro...")
+            try:
+                import sendgrid
+                from sendgrid.helpers.mail import Mail
+                
+                sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+                
+                message = Mail(
+                    from_email='noreply@sendgrid.net',  # Use SendGrid verified domain
+                    to_emails=test_email,
+                    subject='Teste SendGrid - macOS InstallAssistant Browser',
+                    html_content='<h1>Teste de Email</h1><p>Este é um teste do sistema de pagamentos.</p>'
+                )
+                
+                response = sg.send(message)
+                print(f"📧 SendGrid response: {response.status_code}")
+                
+                if response.status_code in [200, 201, 202]:
+                    print(f"✅ Email enviado via SendGrid para: {test_email}")
+                    return jsonify({
+                        'success': True,
+                        'message': 'Email enviado via SendGrid com sucesso',
+                        'test_email': test_email,
+                        'method': 'SendGrid',
+                        'status_code': response.status_code
+                    })
+                else:
+                    print(f"❌ SendGrid falhou: {response.status_code}")
+                    
+            except Exception as sendgrid_error:
+                print(f"❌ Erro SendGrid: {sendgrid_error}")
+        
+        # Fallback to SMTP
+        print(f"📧 Tentando SMTP como fallback...")
         try:
             import smtplib
             from email.mime.text import MIMEText
@@ -996,16 +1031,17 @@ def test_email():
             print(f"👤 Usuário: {SMTP_USERNAME}")
             print(f"🔐 Senha configurada: {EMAIL_CONFIGURED}")
             
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
             
-            print(f"✅ Email de teste enviado com sucesso!")
+            print(f"✅ Email de teste enviado via SMTP!")
             return jsonify({
                 'success': True,
-                'message': 'Email de teste enviado com sucesso',
-                'test_email': test_email
+                'message': 'Email de teste enviado via SMTP com sucesso',
+                'test_email': test_email,
+                'method': 'SMTP'
             })
             
         except Exception as smtp_error:
