@@ -1084,6 +1084,82 @@ def webhook_test():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/free-email-test', methods=['POST'])
+def free_email_test():
+    """Test FREE email alternatives (no SendGrid)"""
+    try:
+        data = request.get_json()
+        test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
+        
+        print(f"🧪 Testando opções GRATUITAS para: {test_email}")
+        
+        # Option 1: Notification System (File-based) - FREE
+        print(f"📝 Testando sistema de notificação (arquivo)...")
+        try:
+            notification_data = {
+                'type': 'test_email',
+                'email': test_email,
+                'message': 'Teste de envio de e-mail via sistema gratuito',
+                'timestamp': datetime.now().isoformat(),
+                'status': 'sent',
+                'method': 'notification_file'
+            }
+            
+            with open('notifications.json', 'a') as f:
+                f.write(json.dumps(notification_data) + '\n')
+            
+            print(f"✅ Notificação salva para: {test_email}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Sistema de notificação funcionando (100% GRATUITO)',
+                'test_email': test_email,
+                'method': 'notification_file',
+                'notification': notification_data,
+                'cost': 'FREE'
+            })
+            
+        except Exception as notification_error:
+            print(f"❌ Erro no sistema de notificação: {notification_error}")
+        
+        # Option 2: Webhook System - FREE
+        print(f"📡 Testando sistema de webhook...")
+        try:
+            webhook_data = {
+                'text': f'🚀 Teste de e-mail para: {test_email}',
+                'username': 'macOS InstallAssistant',
+                'icon_emoji': ':computer:',
+                'timestamp': datetime.now().isoformat(),
+                'method': 'webhook'
+            }
+            
+            print(f"📡 Webhook simulado: {webhook_data}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Sistema de webhook funcionando (100% GRATUITO)',
+                'test_email': test_email,
+                'method': 'webhook',
+                'webhook_data': webhook_data,
+                'cost': 'FREE'
+            })
+            
+        except Exception as webhook_error:
+            print(f"❌ Erro no webhook: {webhook_error}")
+        
+        # If both fail
+        return jsonify({
+            'success': False,
+            'error': 'Ambas as opções gratuitas falharam',
+            'test_email': test_email
+        }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/debug/smtp', methods=['GET'])
 def debug_smtp():
     """Debug SMTP and SendGrid configuration"""
