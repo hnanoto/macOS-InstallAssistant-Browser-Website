@@ -957,6 +957,43 @@ def health_check():
         'version': '1.0.0'
     })
 
+@app.route('/api/debug/sendgrid-test', methods=['GET'])
+def sendgrid_test():
+    """Simple SendGrid test"""
+    try:
+        if not USE_SENDGRID:
+            return jsonify({
+                'success': False,
+                'error': 'SendGrid not configured'
+            })
+        
+        import sendgrid
+        from sendgrid.helpers.mail import Mail
+        
+        sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+        
+        # Simple test message
+        message = Mail(
+            from_email='noreply@sendgrid.net',
+            to_emails='hackintoshandbeyond@gmail.com',
+            subject='SendGrid Test',
+            html_content='<p>Teste simples do SendGrid</p>'
+        )
+        
+        response = sg.send(message)
+        
+        return jsonify({
+            'success': True,
+            'status_code': response.status_code,
+            'message': 'SendGrid test completed'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/debug/smtp', methods=['GET'])
 def debug_smtp():
     """Debug SMTP and SendGrid configuration"""
