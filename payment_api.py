@@ -499,15 +499,39 @@ class EmailService:
             """
         
         # Try Resend first (RECOMMENDED - 3000 emails/month FREE)
-        if USE_RESEND:
-            print(f"📧 Tentando enviar via Resend para: {email}")
-            if EmailService._send_via_resend(email, subject, html_content):
+        print(f"📧 Tentando Resend primeiro...")
+        try:
+            import resend
+            
+            # Use the API key from environment or hardcoded for testing
+            resend_api_key = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
+            resend.api_key = resend_api_key
+            
+            params = {
+                "from": FROM_EMAIL,
+                "to": [email],
+                "subject": subject,
+                "html": html_content,
+            }
+            
+            response = resend.Emails.send(params)
+            
+            if response and hasattr(response, 'id'):
+                print(f"✅ Email enviado via Resend para: {email} (ID: {response.id})")
+                print(f"📧 SERIAL: {serial}")
+                print(f"📧 TRANSAÇÃO: {transaction_id}")
                 return True
-            print("⚠️ Resend falhou, tentando SendGrid...")
+            else:
+                print(f"❌ Resend falhou: {response}")
+                
+        except ImportError:
+            print("❌ Resend não instalado")
+        except Exception as resend_error:
+            print(f"❌ Erro Resend: {resend_error}")
         
         # Try SendGrid second
         if USE_SENDGRID:
-            print(f"📧 Tentando enviar via SendGrid para: {email}")
+            print(f"📧 Tentando SendGrid...")
             if EmailService._send_via_sendgrid(email, subject, html_content):
                 return True
             print("⚠️ SendGrid falhou, tentando sistema de notificação...")
