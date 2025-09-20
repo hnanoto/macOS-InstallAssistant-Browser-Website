@@ -49,20 +49,30 @@ PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 # Email configuration - Auto-detect environment
 IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
 
+# Email providers configuration
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+USE_SENDGRID = bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip())
+
 if IS_RAILWAY:
     # Railway configuration - use environment variables
     SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
     SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
     SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'hackintoshandbeyond@gmail.com')
-    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'pvqd jzvt sjyz azwn')
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # Must be set in Railway environment
     FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
 else:
     # Local configuration
     SMTP_SERVER = 'smtp.gmail.com'
     SMTP_PORT = 587
     SMTP_USERNAME = 'hackintoshandbeyond@gmail.com'
-    SMTP_PASSWORD = 'pvqd jzvt sjyz azwn'  # App Password
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # Use environment variable
     FROM_EMAIL = 'hackintoshandbeyond@gmail.com'
+
+# Email configuration validation
+EMAIL_CONFIGURED = bool(
+    (SMTP_PASSWORD and SMTP_PASSWORD.strip() and SMTP_PASSWORD != 'your_app_password_here') or
+    USE_SENDGRID
+)
 
 # PIX Configuration
 PIX_PROVIDER_API_KEY = os.getenv('PIX_PROVIDER_API_KEY')
@@ -272,6 +282,38 @@ class EmailService:
     """Handles email sending with multiple fallback options"""
     
     @staticmethod
+    def _send_via_sendgrid(email: str, subject: str, html_content: str) -> bool:
+        """Send email via SendGrid API"""
+        try:
+            import sendgrid
+            from sendgrid.helpers.mail import Mail
+            
+            sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+            
+            message = Mail(
+                from_email=FROM_EMAIL,
+                to_emails=email,
+                subject=subject,
+                html_content=html_content
+            )
+            
+            response = sg.send(message)
+            
+            if response.status_code in [200, 201, 202]:
+                print(f"✅ Email enviado via SendGrid para: {email}")
+                return True
+            else:
+                print(f"❌ Erro SendGrid para {email}: {response.status_code}")
+                return False
+                
+        except ImportError:
+            print("❌ SendGrid não instalado. Instale com: pip install sendgrid")
+            return False
+        except Exception as e:
+            print(f"❌ Erro SendGrid para {email}: {e}")
+            return False
+    
+    @staticmethod
     def _send_via_api(email: str, subject: str, html_content: str) -> bool:
         """Send email via HTTP API (works on Railway)"""
         try:
@@ -306,9 +348,9 @@ class EmailService:
         """Send serial activation email"""
         print(f"🔄 Tentando enviar email para: {email}")
         
-        # Verificar se SMTP está configurado corretamente
-        if SMTP_PASSWORD == 'your_app_password_here' or not SMTP_PASSWORD:
-            print("⚠️ SMTP não configurado, usando sistema de notificação alternativo...")
+        # Verificar se email está configurado
+        if not EMAIL_CONFIGURED:
+            print("⚠️ Email não configurado, usando sistema de notificação alternativo...")
             
             # Create a simple notification system
             notification_data = {
@@ -334,12 +376,23 @@ class EmailService:
             print(f"📧 TRANSAÇÃO: {transaction_id}")
             print("✅ Email simulado enviado com sucesso!")
             return True
+        
+        # Try SendGrid first if available
+        if USE_SENDGRID:
+            print(f"📧 Tentando enviar via SendGrid para: {email}")
+            if EmailService._send_via_sendgrid(email, subject, html_content):
+                return True
+            print("⚠️ SendGrid falhou, tentando SMTP...")
             
         print(f"📧 SMTP Config: {SMTP_SERVER}:{SMTP_PORT}, User: {SMTP_USERNAME}")
         
         try:
             # Create email content
             subject = "Sua Licença do macOS InstallAssistant Browser"
+            
+            print(f"📧 Criando conteúdo do email para: {email}")
+            print(f"📧 Serial: {serial}")
+            print(f"📧 Transação: {transaction_id}")
             
             html_content = f"""
             <!DOCTYPE html>
@@ -430,9 +483,10 @@ class EmailService:
             html_part = MIMEText(html_content, 'html')
             msg.attach(html_part)
             
-            # Send email
-            print(f"📤 Conectando ao servidor SMTP...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            # Send email with timeout
+            print(f"📤 Conectando ao servidor SMTP: {SMTP_SERVER}:{SMTP_PORT}")
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                print(f"🔐 Iniciando TLS...")
                 server.starttls()
                 print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
@@ -442,8 +496,20 @@ class EmailService:
             print(f"✅ Email enviado com sucesso para: {email}")
             return True
             
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ Erro de autenticação SMTP para {email}: {e}")
+            print(f"🔍 Verifique as credenciais SMTP no Railway")
+            return False
+        except smtplib.SMTPConnectError as e:
+            print(f"❌ Erro de conexão SMTP para {email}: {e}")
+            print(f"🔍 Verifique se o servidor SMTP está acessível")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"❌ Erro SMTP para {email}: {e}")
+            print(f"🔍 Tipo do erro SMTP: {type(e).__name__}")
+            return False
         except Exception as e:
-            print(f"❌ Erro ao enviar email para {email}: {e}")
+            print(f"❌ Erro geral ao enviar email para {email}: {e}")
             print(f"🔍 Tipo do erro: {type(e).__name__}")
             return False
     
@@ -455,8 +521,8 @@ class EmailService:
         print(f"👤 Cliente: {customer_name} ({customer_email})")
         
         # Verificar se SMTP está configurado corretamente
-        if SMTP_PASSWORD == 'your_app_password_here':
-            print("⚠️ SMTP não configurado (senha placeholder), simulando notificação admin...")
+        if not EMAIL_CONFIGURED:
+            print("⚠️ SMTP não configurado, simulando notificação admin...")
             print(f"📧 NOTIFICAÇÃO ADMIN SIMULADA PARA: {admin_email}")
             print(f"📧 CLIENTE: {customer_name} ({customer_email})")
             print(f"📧 SERIAL: {serial}")
@@ -556,8 +622,9 @@ class EmailService:
             msg.attach(html_part)
             
             # Send email
-            print(f"📤 Conectando ao servidor SMTP para admin...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            print(f"📤 Conectando ao servidor SMTP para admin: {SMTP_SERVER}:{SMTP_PORT}")
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                print(f"🔐 Iniciando TLS para admin...")
                 server.starttls()
                 print(f"🔐 Fazendo login admin com: {SMTP_USERNAME}")
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
@@ -567,8 +634,20 @@ class EmailService:
             print(f"✅ Notificação admin enviada com sucesso para: {admin_email}")
             return True
             
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ Erro de autenticação SMTP admin para {admin_email}: {e}")
+            print(f"🔍 Verifique as credenciais SMTP no Railway")
+            return False
+        except smtplib.SMTPConnectError as e:
+            print(f"❌ Erro de conexão SMTP admin para {admin_email}: {e}")
+            print(f"🔍 Verifique se o servidor SMTP está acessível")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"❌ Erro SMTP admin para {admin_email}: {e}")
+            print(f"🔍 Tipo do erro SMTP: {type(e).__name__}")
+            return False
         except Exception as e:
-            print(f"❌ Erro ao enviar notificação admin para {admin_email}: {e}")
+            print(f"❌ Erro geral ao enviar notificação admin para {admin_email}: {e}")
             print(f"🔍 Tipo do erro: {type(e).__name__}")
             return False
     
@@ -581,8 +660,8 @@ class EmailService:
         print(f"📁 Arquivo: {filename}")
         
         # Verificar se SMTP está configurado corretamente
-        if SMTP_PASSWORD == 'your_app_password_here':
-            print("⚠️ SMTP não configurado (senha placeholder), simulando notificação...")
+        if not EMAIL_CONFIGURED:
+            print("⚠️ SMTP não configurado, simulando notificação...")
             print(f"📧 NOTIFICAÇÃO PENDENTE SIMULADA PARA: {admin_email}")
             print(f"📧 CLIENTE: {customer_name} ({customer_email})")
             print(f"📧 TRANSAÇÃO: {transaction_id}")
@@ -690,8 +769,9 @@ class EmailService:
             msg.attach(html_part)
             
             # Send email
-            print(f"📤 Conectando ao servidor SMTP para notificação pendente...")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            print(f"📤 Conectando ao servidor SMTP para notificação pendente: {SMTP_SERVER}:{SMTP_PORT}")
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                print(f"🔐 Iniciando TLS para notificação pendente...")
                 server.starttls()
                 print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
@@ -701,8 +781,20 @@ class EmailService:
             print(f"✅ Notificação de comprovante pendente enviada com sucesso para: {admin_email}")
             return True
             
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ Erro de autenticação SMTP para notificação pendente {admin_email}: {e}")
+            print(f"🔍 Verifique as credenciais SMTP no Railway")
+            return False
+        except smtplib.SMTPConnectError as e:
+            print(f"❌ Erro de conexão SMTP para notificação pendente {admin_email}: {e}")
+            print(f"🔍 Verifique se o servidor SMTP está acessível")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"❌ Erro SMTP para notificação pendente {admin_email}: {e}")
+            print(f"🔍 Tipo do erro SMTP: {type(e).__name__}")
+            return False
         except Exception as e:
-            print(f"❌ Erro ao enviar notificação pendente para {admin_email}: {e}")
+            print(f"❌ Erro geral ao enviar notificação pendente para {admin_email}: {e}")
             print(f"🔍 Tipo do erro: {type(e).__name__}")
             return False
 
@@ -872,7 +964,7 @@ def debug_smtp():
         'smtp_server': SMTP_SERVER,
         'smtp_port': SMTP_PORT,
         'smtp_username': SMTP_USERNAME,
-        'smtp_password_set': bool(SMTP_PASSWORD and SMTP_PASSWORD != 'your_app_password_here'),
+        'smtp_password_set': EMAIL_CONFIGURED,
         'from_email': FROM_EMAIL,
         'password_length': len(SMTP_PASSWORD) if SMTP_PASSWORD else 0
     }
@@ -898,7 +990,7 @@ def test_email():
             print(f"🔄 Testando conexão SMTP...")
             print(f"📧 Servidor: {SMTP_SERVER}:{SMTP_PORT}")
             print(f"👤 Usuário: {SMTP_USERNAME}")
-            print(f"🔐 Senha configurada: {bool(SMTP_PASSWORD and SMTP_PASSWORD != 'your_app_password_here')}")
+            print(f"🔐 Senha configurada: {EMAIL_CONFIGURED}")
             
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 server.starttls()
@@ -1079,6 +1171,127 @@ def debug_test_notification():
             }), 500
         
     except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/debug/test-proof-email', methods=['POST'])
+def debug_test_proof_email():
+    """Debug endpoint to test proof notification email"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id', 'pix_test_20250919_120000_test')
+        email = data.get('email', 'test@example.com')
+        name = data.get('name', 'Cliente Teste')
+        filename = data.get('filename', 'test_proof.png')
+        
+        print(f"🧪 Testando envio de email de comprovante...")
+        print(f"📧 Email: {email}")
+        print(f"💳 Payment ID: {payment_id}")
+        print(f"📁 Arquivo: {filename}")
+        
+        # Test sending proof notification email
+        result = EmailService.send_proof_pending_notification(
+            email,
+            name,
+            payment_id,
+            'pix',
+            2650,  # R$ 26,50 in cents
+            'BRL',
+            filename,
+            False
+        )
+        
+        return jsonify({
+            'success': result,
+            'message': 'Email de comprovante enviado com sucesso' if result else 'Falha ao enviar email de comprovante',
+            'payment_id': payment_id,
+            'email': email,
+            'email_configured': EMAIL_CONFIGURED
+        })
+        
+    except Exception as e:
+        print(f"❌ Erro no teste de email de comprovante: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/debug/quick-approve', methods=['POST'])
+def debug_quick_approve():
+    """Debug endpoint to quickly approve a payment (for testing)"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id')
+        
+        if not payment_id:
+            return jsonify({'error': 'Missing payment_id'}), 400
+        
+        print(f"🚀 Aprovação rápida solicitada para: {payment_id}")
+        
+        # Check if payment exists
+        if payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        payment = payments_db[payment_id]
+        
+        # Check if payment has proof
+        if not payment.get('proof_filename'):
+            return jsonify({'error': 'Payment has no proof uploaded'}), 400
+        
+        # Approve payment
+        payment['status'] = 'approved'
+        payment['approved_at'] = datetime.now().isoformat()
+        payment['approved_by'] = 'debug_quick_approve'
+        
+        # Generate serial
+        email = payment.get('proof_uploaded_by', payment.get('email', ''))
+        if email:
+            payment['serial'] = PaymentProcessor.generate_serial(email)
+            
+            # Send emails asynchronously
+            import threading
+            def send_emails_async():
+                # Send email to customer
+                EmailService.send_serial_email(
+                    email,
+                    payment.get('name', 'Cliente'),
+                    payment['serial'],
+                    payment_id
+                )
+                
+                # Send notification to admin
+                EmailService.send_admin_notification(
+                    email,
+                    payment.get('name', 'Cliente'),
+                    payment['serial'],
+                    payment_id,
+                    payment['method'],
+                    payment['amount'],
+                    payment['currency']
+                )
+            
+            # Start email sending in background thread
+            email_thread = threading.Thread(target=send_emails_async)
+            email_thread.daemon = True
+            email_thread.start()
+        
+        save_payments()
+        
+        print(f"✅ Pagamento aprovado rapidamente: {payment_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Pagamento aprovado e serial enviado',
+            'payment_id': payment_id,
+            'status': 'approved',
+            'serial': payment.get('serial'),
+            'email': email
+        })
+        
+    except Exception as e:
+        print(f"❌ Erro na aprovação rápida: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

@@ -30,5 +30,8 @@ coloredlogs==15.0.1
 # Optional: For email templates
 premailer==3.10.0
 
+# Email providers
+sendgrid==6.10.0
+
 # Optional: For better error handling
 sentry-sdk[flask]==1.38.0

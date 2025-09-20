@@ -1,168 +1,230 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Teste para verificar se a configuração SMTP está funcionando
-e se os emails estão sendo enviados corretamente
+Script de teste para verificar se as correções de e-mail estão funcionando
 """
 
-import os
-import sys
 import requests
 import json
-from dotenv import load_dotenv
+import time
 
-# Carregar variáveis do .env
-load_dotenv()
+# Configuração
+BASE_URL = "https://web-production-1513a.up.railway.app"
+# BASE_URL = "http://localhost:5001"  # Para teste local
 
-def test_smtp_configuration():
+def test_smtp_config():
     """Testa a configuração SMTP"""
-    print("🧪 Testando configuração SMTP...")
-    
-    smtp_password = os.getenv('SMTP_PASSWORD')
-    smtp_username = os.getenv('SMTP_USERNAME')
-    smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT')
-    
-    print(f"📧 Servidor: {smtp_server}")
-    print(f"🔌 Porta: {smtp_port}")
-    print(f"👤 Usuário: {smtp_username}")
-    print(f"🔑 Senha configurada: {'✅ SIM' if smtp_password and smtp_password != 'your_app_password_here' else '❌ NÃO'}")
-    
-    if smtp_password == 'your_app_password_here':
-        print("\n🚨 PROBLEMA ENCONTRADO!")
-        print("A senha SMTP ainda está como placeholder.")
-        print("Por favor, configure uma senha de aplicativo do Gmail no arquivo .env")
-        return False
-    
-    if not smtp_password:
-        print("\n🚨 PROBLEMA ENCONTRADO!")
-        print("A senha SMTP não está configurada.")
-        return False
-    
-    print("\n✅ Configuração SMTP parece estar correta!")
-    return True
-
-def test_payment_email_flow():
-    """Testa o fluxo completo de pagamento e envio de email"""
-    print("\n🧪 Testando fluxo de pagamento e email...")
-    
-    # URL da API
-    base_url = "http://localhost:5001"
-    
-    # Dados do teste
-    test_data = {
-        "email": "teste@exemplo.com",
-        "name": "Usuario Teste",
-        "method": "pix"
-    }
+    print("🔍 Testando configuração SMTP...")
     
     try:
-        # 1. Verificar se a API está rodando
-        print("📡 Verificando se a API está rodando...")
-        response = requests.get(f"{base_url}/api/health", timeout=5)
-        if response.status_code != 200:
-            print(f"❌ API não está rodando. Status: {response.status_code}")
-            print("💡 Execute: python3 payment_api.py")
+        response = requests.get(f"{BASE_URL}/api/debug/smtp", timeout=10)
+        if response.status_code == 200:
+            config = response.json()
+            print(f"✅ Configuração SMTP:")
+            print(f"   Servidor: {config['smtp_server']}:{config['smtp_port']}")
+            print(f"   Usuário: {config['smtp_username']}")
+            print(f"   Senha configurada: {config['smtp_password_set']}")
+            print(f"   Email remetente: {config['from_email']}")
+            return config['smtp_password_set']
+        else:
+            print(f"❌ Erro ao obter configuração SMTP: {response.status_code}")
             return False
-        
-        print("✅ API está rodando!")
-        
-        # 2. Processar compra
-        print("\n📝 Processando compra de teste...")
-        response = requests.post(
-            f"{base_url}/api/swift/process-purchase",
-            json=test_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=10
-        )
-        
-        if response.status_code != 200:
-            print(f"❌ Erro ao processar compra: {response.status_code}")
-            print(f"Resposta: {response.text}")
-            return False
-            
-        purchase_result = response.json()
-        print(f"✅ Compra processada: {purchase_result.get('payment_id', 'N/A')}")
-        
-        payment_id = purchase_result.get('payment_id')
-        if not payment_id:
-            print("❌ Payment ID não encontrado")
-            return False
-            
-        # 3. Confirmar pagamento (isso deve enviar o email)
-        print("\n💳 Confirmando pagamento (enviando email)...")
-        confirm_data = {
-            "payment_id": payment_id,
-            "email": test_data["email"]
+    except Exception as e:
+        print(f"❌ Erro ao testar configuração SMTP: {e}")
+        return False
+
+def test_email_sending():
+    """Testa o envio de e-mail"""
+    print("\n📧 Testando envio de e-mail...")
+    
+    try:
+        payload = {
+            "email": "hackintoshandbeyond@gmail.com"
         }
         
         response = requests.post(
-            f"{base_url}/api/swift/confirm-payment",
-            json=confirm_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=10
+            f"{BASE_URL}/api/debug/test-email",
+            json=payload,
+            timeout=30
         )
         
-        if response.status_code != 200:
-            print(f"❌ Erro ao confirmar pagamento: {response.status_code}")
-            print(f"Resposta: {response.text}")
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print(f"✅ E-mail de teste enviado com sucesso!")
+                print(f"   Destinatário: {result['test_email']}")
+                return True
+            else:
+                print(f"❌ Falha ao enviar e-mail: {result.get('error', 'Erro desconhecido')}")
+                return False
+        else:
+            print(f"❌ Erro HTTP: {response.status_code}")
+            print(f"   Resposta: {response.text}")
             return False
             
-        confirm_result = response.json()
-        print(f"✅ Pagamento confirmado!")
+    except Exception as e:
+        print(f"❌ Erro ao testar envio de e-mail: {e}")
+        return False
+
+def test_proof_email():
+    """Testa o envio de e-mail de comprovante"""
+    print("\n📋 Testando envio de e-mail de comprovante...")
+    
+    try:
+        payload = {
+            "payment_id": "pix_test_20250919_120000_test",
+            "email": "test@example.com",
+            "name": "Cliente Teste",
+            "filename": "comprovante_teste.png"
+        }
         
-        # 4. Verificar se o email foi enviado
-        email_sent = confirm_result.get('email_sent', False)
-        notification_sent = confirm_result.get('notification_sent', False)
-        serial = confirm_result.get('serial')
+        response = requests.post(
+            f"{BASE_URL}/api/debug/test-proof-email",
+            json=payload,
+            timeout=30
+        )
         
-        print(f"\n📊 Resultados:")
-        print(f"📧 Email para cliente enviado: {'✅ SIM' if email_sent else '❌ NÃO'}")
-        print(f"📧 Notificação admin enviada: {'✅ SIM' if notification_sent else '❌ NÃO'}")
-        print(f"🔑 Serial gerado: {serial}")
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print(f"✅ E-mail de comprovante enviado com sucesso!")
+                print(f"   Payment ID: {result['payment_id']}")
+                print(f"   Email: {result['email']}")
+                print(f"   Email configurado: {result['email_configured']}")
+                return True
+            else:
+                print(f"❌ Falha ao enviar e-mail de comprovante: {result.get('error', 'Erro desconhecido')}")
+                return False
+        else:
+            print(f"❌ Erro HTTP: {response.status_code}")
+            print(f"   Resposta: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Erro ao testar e-mail de comprovante: {e}")
+        return False
+
+def test_quick_approve():
+    """Testa a aprovação rápida de pagamento"""
+    print("\n🚀 Testando aprovação rápida de pagamento...")
+    
+    try:
+        # Primeiro, vamos ver se há pagamentos pendentes
+        response = requests.get(f"{BASE_URL}/api/admin/pending-payments", timeout=10)
         
-        if email_sent and notification_sent and serial:
-            print("\n🎉 SUCESSO! Emails estão sendo enviados corretamente!")
+        if response.status_code == 200:
+            result = response.json()
+            pending_payments = result.get('pending_payments', [])
+            
+            if pending_payments:
+                # Usar o primeiro pagamento pendente
+                payment = pending_payments[0]
+                payment_id = payment['payment_id']
+                
+                print(f"   Encontrado pagamento pendente: {payment_id}")
+                
+                # Aprovar o pagamento
+                approve_payload = {"payment_id": payment_id}
+                
+                approve_response = requests.post(
+                    f"{BASE_URL}/api/debug/quick-approve",
+                    json=approve_payload,
+                    timeout=30
+                )
+                
+                if approve_response.status_code == 200:
+                    approve_result = approve_response.json()
+                    if approve_result['success']:
+                        print(f"✅ Pagamento aprovado com sucesso!")
+                        print(f"   Payment ID: {approve_result['payment_id']}")
+                        print(f"   Status: {approve_result['status']}")
+                        print(f"   Serial: {approve_result.get('serial', 'N/A')}")
+                        print(f"   Email: {approve_result.get('email', 'N/A')}")
+                        return True
+                    else:
+                        print(f"❌ Falha ao aprovar pagamento: {approve_result.get('error', 'Erro desconhecido')}")
+                        return False
+                else:
+                    print(f"❌ Erro HTTP na aprovação: {approve_response.status_code}")
+                    print(f"   Resposta: {approve_response.text}")
+                    return False
+            else:
+                print("⚠️ Nenhum pagamento pendente encontrado para testar")
+                return True  # Não é um erro, só não há nada para testar
+        else:
+            print(f"❌ Erro ao buscar pagamentos pendentes: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Erro ao testar aprovação rápida: {e}")
+        return False
+
+def test_health():
+    """Testa se o servidor está funcionando"""
+    print("🏥 Testando saúde do servidor...")
+    
+    try:
+        response = requests.get(f"{BASE_URL}/api/health", timeout=10)
+        if response.status_code == 200:
+            health = response.json()
+            print(f"✅ Servidor funcionando: {health['status']}")
+            print(f"   Versão: {health['version']}")
+            print(f"   Timestamp: {health['timestamp']}")
             return True
         else:
-            print("\n⚠️ PROBLEMA! Alguns emails não foram enviados.")
+            print(f"❌ Servidor com problemas: {response.status_code}")
             return False
-            
-    except requests.exceptions.ConnectionError:
-        print("❌ Não foi possível conectar à API.")
-        print("💡 Certifique-se de que o servidor está rodando:")
-        print("   python3 payment_api.py")
-        return False
     except Exception as e:
-        print(f"❌ Erro durante o teste: {e}")
+        print(f"❌ Erro ao testar servidor: {e}")
         return False
 
 def main():
-    """Função principal"""
-    print("🔧 TESTE DE CORREÇÃO - Sistema de Email")
-    print("=" * 50)
+    """Executa todos os testes"""
+    print("🧪 Iniciando testes de correção de e-mail...")
+    print(f"🌐 URL base: {BASE_URL}")
+    print("=" * 60)
     
-    # Teste 1: Configuração SMTP
-    smtp_ok = test_smtp_configuration()
+    # Teste 1: Saúde do servidor
+    server_ok = test_health()
+    if not server_ok:
+        print("\n❌ Servidor não está funcionando. Abortando testes.")
+        return
     
-    if not smtp_ok:
-        print("\n🛑 TESTE INTERROMPIDO")
-        print("Configure a senha SMTP antes de continuar.")
-        return False
+    # Teste 2: Configuração SMTP
+    smtp_configured = test_smtp_config()
+    if not smtp_configured:
+        print("\n⚠️ SMTP não está configurado. Configure as variáveis de ambiente no Railway.")
+        print("   Consulte o arquivo RAILWAY_EMAIL_SETUP.md para instruções.")
+        return
     
-    # Teste 2: Fluxo de pagamento e email
-    flow_ok = test_payment_email_flow()
+    # Teste 3: Envio de e-mail
+    email_ok = test_email_sending()
     
-    print("\n" + "=" * 50)
-    if smtp_ok and flow_ok:
-        print("🎉 TODOS OS TESTES PASSARAM!")
-        print("✅ Sistema de email está funcionando corretamente")
-        return True
+    # Teste 4: E-mail de comprovante
+    proof_email_ok = test_proof_email()
+    
+    # Teste 5: Aprovação rápida
+    quick_approve_ok = test_quick_approve()
+    
+    # Resultado final
+    print("\n" + "=" * 60)
+    print("📊 RESULTADO DOS TESTES:")
+    print(f"   Servidor: {'✅ OK' if server_ok else '❌ FALHA'}")
+    print(f"   SMTP Configurado: {'✅ OK' if smtp_configured else '❌ FALHA'}")
+    print(f"   E-mail de Teste: {'✅ OK' if email_ok else '❌ FALHA'}")
+    print(f"   E-mail de Comprovante: {'✅ OK' if proof_email_ok else '❌ FALHA'}")
+    print(f"   Aprovação Rápida: {'✅ OK' if quick_approve_ok else '❌ FALHA'}")
+    
+    if all([server_ok, smtp_configured, email_ok, proof_email_ok, quick_approve_ok]):
+        print("\n🎉 TODOS OS TESTES PASSARAM!")
+        print("   O sistema de e-mail está funcionando corretamente.")
     else:
-        print("❌ ALGUNS TESTES FALHARAM")
-        print("🔧 Verifique a configuração e tente novamente")
-        return False
+        print("\n⚠️ ALGUNS TESTES FALHARAM!")
+        print("   Verifique a configuração no Railway e os logs do servidor.")
+    
+    print("\n📋 Próximos passos:")
+    print("   1. Verifique se os e-mails chegaram na caixa de entrada")
+    print("   2. Teste o fluxo completo de upload de comprovante")
+    print("   3. Monitore os logs do Railway para erros")
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()
