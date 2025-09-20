@@ -991,7 +991,7 @@ def test_email():
                 sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
                 
                 message = Mail(
-                    from_email='noreply@sendgrid.net',  # Use SendGrid verified domain
+                    from_email=FROM_EMAIL,  # Use configured email
                     to_emails=test_email,
                     subject='Teste SendGrid - macOS InstallAssistant Browser',
                     html_content='<h1>Teste de Email</h1><p>Este é um teste do sistema de pagamentos.</p>'
