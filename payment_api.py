@@ -53,6 +53,9 @@ IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 USE_SENDGRID = bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip())
 
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+USE_RESEND = bool(RESEND_API_KEY and RESEND_API_KEY.strip())
+
 if IS_RAILWAY:
     # Railway configuration - use environment variables
     SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
@@ -71,7 +74,8 @@ else:
 # Email configuration validation
 EMAIL_CONFIGURED = bool(
     (SMTP_PASSWORD and SMTP_PASSWORD.strip() and SMTP_PASSWORD != 'your_app_password_here') or
-    USE_SENDGRID
+    USE_SENDGRID or
+    USE_RESEND
 )
 
 # PIX Configuration
@@ -287,30 +291,61 @@ class EmailService:
         try:
             import sendgrid
             from sendgrid.helpers.mail import Mail
-            
+
             sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
-            
+
             message = Mail(
                 from_email=FROM_EMAIL,
                 to_emails=email,
                 subject=subject,
                 html_content=html_content
             )
-            
+
             response = sg.send(message)
-            
+
             if response.status_code in [200, 201, 202]:
                 print(f"✅ Email enviado via SendGrid para: {email}")
                 return True
             else:
                 print(f"❌ Erro SendGrid para {email}: {response.status_code}")
                 return False
-                
+
         except ImportError:
             print("❌ SendGrid não instalado. Instale com: pip install sendgrid")
             return False
         except Exception as e:
             print(f"❌ Erro SendGrid para {email}: {e}")
+            return False
+
+    @staticmethod
+    def _send_via_resend(email: str, subject: str, html_content: str) -> bool:
+        """Send email via Resend API"""
+        try:
+            import resend
+
+            resend.api_key = RESEND_API_KEY
+
+            params = {
+                "from": FROM_EMAIL,
+                "to": [email],
+                "subject": subject,
+                "html": html_content,
+            }
+
+            response = resend.Emails.send(params)
+
+            if response and hasattr(response, 'id'):
+                print(f"✅ Email enviado via Resend para: {email} (ID: {response.id})")
+                return True
+            else:
+                print(f"❌ Erro Resend para {email}: {response}")
+                return False
+
+        except ImportError:
+            print("❌ Resend não instalado. Instale com: pip install resend")
+            return False
+        except Exception as e:
+            print(f"❌ Erro Resend para {email}: {e}")
             return False
     
     @staticmethod
@@ -463,7 +498,21 @@ class EmailService:
             </html>
             """
         
-        # Use FREE notification system instead of SendGrid/SMTP
+        # Try Resend first (RECOMMENDED - 3000 emails/month FREE)
+        if USE_RESEND:
+            print(f"📧 Tentando enviar via Resend para: {email}")
+            if EmailService._send_via_resend(email, subject, html_content):
+                return True
+            print("⚠️ Resend falhou, tentando SendGrid...")
+        
+        # Try SendGrid second
+        if USE_SENDGRID:
+            print(f"📧 Tentando enviar via SendGrid para: {email}")
+            if EmailService._send_via_sendgrid(email, subject, html_content):
+                return True
+            print("⚠️ SendGrid falhou, tentando sistema de notificação...")
+        
+        # Fallback: FREE notification system
         print(f"📝 Usando sistema de notificação GRATUITO para: {email}")
         try:
             notification_data = {
@@ -489,7 +538,7 @@ class EmailService:
         except Exception as notification_error:
             print(f"❌ Erro no sistema de notificação: {notification_error}")
             
-            # Fallback: webhook simulation
+            # Final fallback: webhook simulation
             print(f"📡 Tentando webhook simulado...")
             webhook_data = {
                 'text': f'🚀 Serial gerado para: {email}\n📧 Serial: {serial}\n🆔 Transação: {transaction_id}',
@@ -1028,6 +1077,47 @@ def sendgrid_test():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/resend-test', methods=['GET'])
+def resend_test():
+    """Simple Resend test"""
+    try:
+        if not USE_RESEND:
+            return jsonify({
+                'success': False,
+                'error': 'Resend not configured'
+            })
+        
+        import resend
+        
+        resend.api_key = RESEND_API_KEY
+        
+        params = {
+            "from": FROM_EMAIL,
+            "to": ["hackintoshandbeyond@gmail.com"],
+            "subject": "Resend Test - macOS InstallAssistant Browser",
+            "html": "<h1>Teste Resend</h1><p>Este é um teste do sistema de e-mails via Resend.</p>"
+        }
+        
+        response = resend.Emails.send(params)
+        
+        if response and hasattr(response, 'id'):
+            return jsonify({
+                'success': True,
+                'email_id': response.id,
+                'message': 'Resend test completed successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Resend response: {response}'
+            })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/debug/notification-test', methods=['POST'])
 def notification_test():
     """Test notification system (file-based)"""
@@ -1196,7 +1286,7 @@ def free_email_test():
 
 @app.route('/api/debug/smtp', methods=['GET'])
 def debug_smtp():
-    """Debug SMTP and SendGrid configuration"""
+    """Debug SMTP, SendGrid and Resend configuration"""
     smtp_config = {
         'smtp_server': SMTP_SERVER,
         'smtp_port': SMTP_PORT,
@@ -1207,7 +1297,11 @@ def debug_smtp():
         'sendgrid_api_key_set': bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip()),
         'sendgrid_api_key_length': len(SENDGRID_API_KEY) if SENDGRID_API_KEY else 0,
         'use_sendgrid': USE_SENDGRID,
-        'email_configured': EMAIL_CONFIGURED
+        'resend_api_key_set': bool(RESEND_API_KEY and RESEND_API_KEY.strip()),
+        'resend_api_key_length': len(RESEND_API_KEY) if RESEND_API_KEY else 0,
+        'use_resend': USE_RESEND,
+        'email_configured': EMAIL_CONFIGURED,
+        'recommended_provider': 'Resend (3000 emails/month FREE)' if USE_RESEND else 'SendGrid (100 emails/day FREE)' if USE_SENDGRID else 'None configured'
     }
     return jsonify(smtp_config)
 
