@@ -1,0 +1,10 @@
+{
+  "RESEND_API_KEY": "re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1",
+  "EMAIL_FROM": "no-reply@seu-dominio.com",
+  "EMAIL_TO_DEFAULT": "hackintoshandbeyond@gmail.com",
+  "REPLY_TO_DEFAULT": "suporte@seu-dominio.com",
+  "APP_BASE_URL": "https://web-production-1513a.up.railway.app",
+  "STORAGE_URL_BASE": "https://cdn.seu-dominio.com/proofs",
+  "RAILWAY_ENVIRONMENT": "production",
+  "FROM_EMAIL": "no-reply@seu-dominio.com"
+}

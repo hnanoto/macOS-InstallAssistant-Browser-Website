@@ -53,8 +53,17 @@ IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
 USE_SENDGRID = bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip())
 
-RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
 USE_RESEND = bool(RESEND_API_KEY and RESEND_API_KEY.strip())
+
+# Email Configuration (Updated)
+EMAIL_FROM = os.getenv('EMAIL_FROM', 'no-reply@seu-dominio.com')
+EMAIL_TO_DEFAULT = os.getenv('EMAIL_TO_DEFAULT', 'hackintoshandbeyond@gmail.com')
+REPLY_TO_DEFAULT = os.getenv('REPLY_TO_DEFAULT', 'suporte@seu-dominio.com')
+
+# App Configuration
+APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://web-production-1513a.up.railway.app')
+STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', 'https://cdn.seu-dominio.com/proofs')
 
 if IS_RAILWAY:
     # Railway configuration - use environment variables
@@ -69,7 +78,7 @@ else:
     SMTP_PORT = 587
     SMTP_USERNAME = 'hackintoshandbeyond@gmail.com'
     SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # Use environment variable
-    FROM_EMAIL = 'hackintoshandbeyond@gmail.com'
+    FROM_EMAIL = EMAIL_FROM
 
 # Email configuration validation
 EMAIL_CONFIGURED = bool(
@@ -503,15 +512,15 @@ class EmailService:
         try:
             import resend
             
-            # Use the API key from environment or hardcoded for testing
-            resend_api_key = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
-            resend.api_key = resend_api_key
+            # Use the API key from environment
+            resend.api_key = RESEND_API_KEY
             
             params = {
-                "from": FROM_EMAIL,
+                "from": EMAIL_FROM,
                 "to": [email],
                 "subject": subject,
                 "html": html_content,
+                "reply_to": REPLY_TO_DEFAULT,
             }
             
             response = resend.Emails.send(params)
