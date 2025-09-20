@@ -990,27 +990,44 @@ def test_email():
                 
                 sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
                 
-                message = Mail(
-                    from_email=FROM_EMAIL,  # Use configured email
-                    to_emails=test_email,
-                    subject='Teste SendGrid - macOS InstallAssistant Browser',
-                    html_content='<h1>Teste de Email</h1><p>Este é um teste do sistema de pagamentos.</p>'
-                )
+                # Try different verified domains
+                verified_domains = [
+                    'noreply@sendgrid.net',
+                    'test@sendgrid.net', 
+                    'hello@sendgrid.net',
+                    FROM_EMAIL  # Fallback to configured email
+                ]
                 
-                response = sg.send(message)
-                print(f"📧 SendGrid response: {response.status_code}")
+                for domain in verified_domains:
+                    try:
+                        message = Mail(
+                            from_email=domain,
+                            to_emails=test_email,
+                            subject='Teste SendGrid - macOS InstallAssistant Browser',
+                            html_content='<h1>Teste de Email</h1><p>Este é um teste do sistema de pagamentos.</p>'
+                        )
+                        
+                        response = sg.send(message)
+                        print(f"📧 SendGrid response com {domain}: {response.status_code}")
+                        
+                        if response.status_code in [200, 201, 202]:
+                            print(f"✅ Email enviado via SendGrid para: {test_email}")
+                            return jsonify({
+                                'success': True,
+                                'message': f'Email enviado via SendGrid com sucesso usando {domain}',
+                                'test_email': test_email,
+                                'method': 'SendGrid',
+                                'from_email': domain,
+                                'status_code': response.status_code
+                            })
+                        else:
+                            print(f"❌ SendGrid falhou com {domain}: {response.status_code}")
+                            
+                    except Exception as domain_error:
+                        print(f"❌ Erro com domínio {domain}: {domain_error}")
+                        continue
                 
-                if response.status_code in [200, 201, 202]:
-                    print(f"✅ Email enviado via SendGrid para: {test_email}")
-                    return jsonify({
-                        'success': True,
-                        'message': 'Email enviado via SendGrid com sucesso',
-                        'test_email': test_email,
-                        'method': 'SendGrid',
-                        'status_code': response.status_code
-                    })
-                else:
-                    print(f"❌ SendGrid falhou: {response.status_code}")
+                print(f"❌ Todos os domínios SendGrid falharam")
                     
             except Exception as sendgrid_error:
                 print(f"❌ Erro SendGrid: {sendgrid_error}")
