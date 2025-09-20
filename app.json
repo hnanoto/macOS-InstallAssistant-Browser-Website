@@ -1,0 +1,24 @@
+{
+  "name": "macOS InstallAssistant Browser API",
+  "description": "Payment API for macOS InstallAssistant Browser",
+  "repository": "https://github.com/hnanoto/macOS-InstallAssistant-Browser-Website",
+  "logo": "https://raw.githubusercontent.com/hnanoto/macOS-InstallAssistant-Browser-Website/main/images/logo.svg",
+  "keywords": ["python", "flask", "payment", "macos", "installassistant"],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "PYTHON_VERSION": {
+      "description": "Python version to use",
+      "value": "3.11.7"
+    }
+  }
+}
