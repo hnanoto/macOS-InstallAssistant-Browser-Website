@@ -1363,6 +1363,42 @@ def test_email():
             except Exception as sendgrid_error:
                 print(f"❌ Erro SendGrid: {sendgrid_error}")
         
+        # Try Resend first (RECOMMENDED - 3000 emails/month FREE)
+        print(f"📧 Tentando Resend primeiro...")
+        try:
+            import resend
+            
+            # Use the API key from environment or hardcoded for testing
+            resend_api_key = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
+            resend.api_key = resend_api_key
+            
+            params = {
+                "from": FROM_EMAIL,
+                "to": [test_email],
+                "subject": "Teste Resend - macOS InstallAssistant Browser",
+                "html": "<h1>Teste Resend</h1><p>Este é um teste do sistema de e-mails via Resend.</p>"
+            }
+            
+            response = resend.Emails.send(params)
+            
+            if response and hasattr(response, 'id'):
+                print(f"✅ Email enviado via Resend para: {test_email} (ID: {response.id})")
+                return jsonify({
+                    'success': True,
+                    'message': 'Email enviado via Resend com sucesso (3000 emails/month FREE)',
+                    'test_email': test_email,
+                    'method': 'Resend',
+                    'email_id': response.id,
+                    'cost': 'FREE'
+                })
+            else:
+                print(f"❌ Resend falhou: {response}")
+                
+        except ImportError:
+            print("❌ Resend não instalado")
+        except Exception as resend_error:
+            print(f"❌ Erro Resend: {resend_error}")
+        
         # Fallback to FREE notification system
         print(f"📝 Tentando sistema de notificação GRATUITO...")
         try:
