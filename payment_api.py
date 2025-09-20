@@ -994,6 +994,96 @@ def sendgrid_test():
             'error': str(e)
         }), 500
 
+@app.route('/api/debug/notification-test', methods=['POST'])
+def notification_test():
+    """Test notification system (file-based)"""
+    try:
+        data = request.get_json()
+        email = data.get('email', 'hackintoshandbeyond@gmail.com')
+        message = data.get('message', 'Teste de notificação')
+        
+        # Save notification to file
+        notification_data = {
+            'type': 'test_notification',
+            'email': email,
+            'message': message,
+            'timestamp': datetime.now().isoformat(),
+            'status': 'pending'
+        }
+        
+        try:
+            with open('notifications.json', 'a') as f:
+                f.write(json.dumps(notification_data) + '\n')
+            
+            print(f"📝 Notificação salva: {email} - {message}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Notificação salva com sucesso',
+                'notification': notification_data
+            })
+            
+        except Exception as file_error:
+            print(f"❌ Erro ao salvar notificação: {file_error}")
+            return jsonify({
+                'success': False,
+                'error': f'Erro ao salvar: {str(file_error)}'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/debug/webhook-test', methods=['POST'])
+def webhook_test():
+    """Test webhook notification system"""
+    try:
+        data = request.get_json()
+        message = data.get('message', 'Teste de webhook')
+        
+        # Test webhook (simulated - you can replace with real webhook URL)
+        webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"  # Replace with real webhook
+        
+        try:
+            import requests
+            
+            payload = {
+                "text": f"🚀 Notificação do Sistema: {message}",
+                "username": "macOS InstallAssistant",
+                "icon_emoji": ":computer:"
+            }
+            
+            # For now, just simulate the webhook call
+            print(f"📡 Webhook simulado: {message}")
+            print(f"🔗 URL: {webhook_url}")
+            print(f"📦 Payload: {json.dumps(payload, indent=2)}")
+            
+            # Uncomment below to send real webhook:
+            # response = requests.post(webhook_url, json=payload, timeout=10)
+            # print(f"📡 Webhook response: {response.status_code}")
+            
+            return jsonify({
+                'success': True,
+                'message': 'Webhook simulado com sucesso',
+                'webhook_url': webhook_url,
+                'payload': payload
+            })
+            
+        except Exception as webhook_error:
+            print(f"❌ Erro no webhook: {webhook_error}")
+            return jsonify({
+                'success': False,
+                'error': f'Erro no webhook: {str(webhook_error)}'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/debug/smtp', methods=['GET'])
 def debug_smtp():
     """Debug SMTP and SendGrid configuration"""
