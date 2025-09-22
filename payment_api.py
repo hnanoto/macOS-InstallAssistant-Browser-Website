@@ -1562,6 +1562,9 @@ def debug_smtp():
         'resend_api_key_set': bool(RESEND_API_KEY and RESEND_API_KEY.strip()),
         'resend_api_key_length': len(RESEND_API_KEY) if RESEND_API_KEY else 0,
         'use_resend': USE_RESEND,
+        'resend_available': RESEND_AVAILABLE,
+        'sendgrid_available': SENDGRID_AVAILABLE,
+        'is_railway': IS_RAILWAY,
         'email_configured': EMAIL_CONFIGURED,
         'recommended_provider': 'Resend (3000 emails/month FREE)' if USE_RESEND else 'SendGrid (100 emails/day FREE)' if USE_SENDGRID else 'None configured'
     }
