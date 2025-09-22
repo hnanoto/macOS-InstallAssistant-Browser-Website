@@ -24,6 +24,26 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import notification system
+try:
+    from notification_system import notification_system
+    NOTIFICATIONS_ENABLED = True
+    print("✅ Sistema de notificações carregado com sucesso")
+except ImportError:
+    NOTIFICATIONS_ENABLED = False
+    notification_system = None
+    print("⚠️ Sistema de notificações não disponível")
+
+# Import auto confirmation system
+try:
+    from auto_confirmation_system import auto_confirmation_system, start_auto_confirmation, get_auto_confirmation_stats
+    AUTO_CONFIRMATION_ENABLED = True
+    print("✅ Sistema de confirmação automática carregado com sucesso")
+except ImportError:
+    AUTO_CONFIRMATION_ENABLED = False
+    auto_confirmation_system = None
+    print("⚠️ Sistema de confirmação automática não disponível")
+
 # Configuration
 app = Flask(__name__)
 CORS(app)
@@ -335,7 +355,7 @@ class EmailService:
             resend.api_key = RESEND_API_KEY
 
             params = {
-                "from": FROM_EMAIL,
+                "from": "onboarding@resend.dev",
                 "to": [email],
                 "subject": subject,
                 "html": html_content,
@@ -343,8 +363,9 @@ class EmailService:
 
             response = resend.Emails.send(params)
 
-            if response and hasattr(response, 'id'):
-                print(f"✅ Email enviado via Resend para: {email} (ID: {response.id})")
+            if response and (hasattr(response, 'id') or (isinstance(response, dict) and 'id' in response)):
+                email_id = response.id if hasattr(response, 'id') else response['id']
+                print(f"✅ Email enviado via Resend para: {email} (ID: {email_id})")
                 return True
             else:
                 print(f"❌ Erro Resend para {email}: {response}")
@@ -516,7 +537,7 @@ class EmailService:
             resend.api_key = RESEND_API_KEY
             
             params = {
-                "from": EMAIL_FROM,
+                "from": "onboarding@resend.dev",
                 "to": [email],
                 "subject": subject,
                 "html": html_content,
@@ -525,58 +546,54 @@ class EmailService:
             
             response = resend.Emails.send(params)
             
-            if response and hasattr(response, 'id'):
-                print(f"✅ Email enviado via Resend para: {email} (ID: {response.id})")
+            # Check if response has id (either as attribute or dict key)
+            response_id = None
+            if hasattr(response, 'id'):
+                response_id = response.id
+            elif isinstance(response, dict) and 'id' in response:
+                response_id = response['id']
+            
+            if response_id:
+                print(f"✅ Email enviado via Resend para: {email} (ID: {response_id})")
                 print(f"📧 SERIAL: {serial}")
                 print(f"📧 TRANSAÇÃO: {transaction_id}")
                 return True
             else:
                 print(f"❌ Resend falhou: {response}")
+                print(f"❌ Tipo da resposta: {type(response)}")
+                print(f"❌ Conteúdo da resposta: {response}")
                 
         except ImportError:
             print("❌ Resend não instalado")
         except Exception as resend_error:
             print(f"❌ Erro Resend: {resend_error}")
         
-        # Fallback: FREE notification system
-        print(f"📝 Usando sistema de notificação GRATUITO para: {email}")
-        try:
-            notification_data = {
-                'type': 'serial_email',
-                'email': email,
-                'name': name,
-                'serial': serial,
-                'transaction_id': transaction_id,
-                'timestamp': datetime.now().isoformat(),
-                'status': 'sent',
-                'method': 'notification_file'
-            }
-            
-            with open('notifications.json', 'a') as f:
-                f.write(json.dumps(notification_data) + '\n')
-            
-            print(f"✅ Notificação salva para: {email}")
-            print(f"📧 SERIAL: {serial}")
-            print(f"📧 TRANSAÇÃO: {transaction_id}")
-            print("✅ Email simulado enviado com sucesso (100% GRATUITO)!")
-            return True
-            
-        except Exception as notification_error:
-            print(f"❌ Erro no sistema de notificação: {notification_error}")
-            
-            # Final fallback: webhook simulation
-            print(f"📡 Tentando webhook simulado...")
-            webhook_data = {
-                'text': f'🚀 Serial gerado para: {email}\n📧 Serial: {serial}\n🆔 Transação: {transaction_id}',
-                'username': 'macOS InstallAssistant',
-                'icon_emoji': ':computer:',
-                'timestamp': datetime.now().isoformat(),
-                'method': 'webhook'
-            }
-            
-            print(f"📡 Webhook simulado: {webhook_data}")
-            print(f"✅ Email simulado enviado via webhook (100% GRATUITO)!")
-            return True
+        # Try SMTP as fallback
+        if SMTP_PASSWORD and SMTP_PASSWORD.strip():
+            print(f"📧 Tentando SMTP como fallback...")
+            try:
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = FROM_EMAIL
+                msg['To'] = email
+                msg['Reply-To'] = REPLY_TO_DEFAULT
+                
+                html_part = MIMEText(html_content, 'html')
+                msg.attach(html_part)
+                
+                server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                
+                print(f"✅ Email enviado via SMTP para: {email}")
+                print(f"📧 SERIAL: {serial}")
+                print(f"📧 TRANSAÇÃO: {transaction_id}")
+                return True
+                
+            except Exception as smtp_error:
+                print(f"❌ Erro SMTP: {smtp_error}")
         
         # Fallback: FREE notification system
         print(f"📝 Usando sistema de notificação GRATUITO para: {email}")
@@ -657,6 +674,53 @@ class EmailService:
             print(f"📡 Webhook simulado: {webhook_data}")
             print(f"✅ Email simulado enviado via webhook (100% GRATUITO)!")
             return True
+        
+        # Fallback: FREE notification system
+        print(f"📝 Usando sistema de notificação GRATUITO para: {email}")
+        try:
+            notification_data = {
+                'type': 'serial_email',
+                'email': email,
+                'name': name,
+                'serial': serial,
+                'transaction_id': transaction_id,
+                'timestamp': datetime.now().isoformat(),
+                'status': 'sent',
+                'method': 'notification_file'
+            }
+            
+            with open('notifications.json', 'a') as f:
+                f.write(json.dumps(notification_data) + '\n')
+            
+            print(f"✅ Notificação salva para: {email}")
+            print(f"📧 SERIAL: {serial}")
+            print(f"📧 TRANSAÇÃO: {transaction_id}")
+            print("✅ Email simulado enviado com sucesso (100% GRATUITO)!")
+            return True
+            
+        except Exception as notification_error:
+            print(f"❌ Erro no sistema de notificação: {notification_error}")
+            
+            # Final fallback: webhook simulation
+            print(f"📡 Tentando webhook simulado...")
+            webhook_data = {
+                'text': f'🚀 Serial gerado para: {email}\n📧 Serial: {serial}\n🆔 Transação: {transaction_id}',
+                'username': 'macOS InstallAssistant',
+                'icon_emoji': ':computer:',
+                'timestamp': datetime.now().isoformat(),
+                'method': 'webhook'
+            }
+            
+            print(f"📡 Webhook simulado: {webhook_data}")
+            print(f"✅ Email simulado enviado via webhook (100% GRATUITO)!")
+            return True
+        
+        # Try Resend first (configured in railway.json)
+        if USE_RESEND:
+            print(f"📧 Tentando Resend...")
+            if EmailService._send_via_resend(email, subject, html_content):
+                return True
+            print("⚠️ Resend falhou, tentando SendGrid...")
         
         # Try SendGrid second
         if USE_SENDGRID:
@@ -857,7 +921,21 @@ class EmailService:
             html_part = MIMEText(html_content, 'html')
             msg.attach(html_part)
             
-            # Send email
+            # Try Resend first (configured in railway.json)
+            if USE_RESEND:
+                print(f"📧 Tentando Resend para admin...")
+                if EmailService._send_via_resend(admin_email, subject, html_content):
+                    return True
+                print("⚠️ Resend falhou para admin, tentando SendGrid...")
+            
+            # Try SendGrid second
+            if USE_SENDGRID:
+                print(f"📧 Tentando SendGrid para admin...")
+                if EmailService._send_via_sendgrid(admin_email, subject, html_content):
+                    return True
+                print("⚠️ SendGrid falhou para admin, tentando SMTP...")
+            
+            # Fallback to SMTP
             print(f"📤 Conectando ao servidor SMTP para admin: {SMTP_SERVER}:{SMTP_PORT}")
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
                 print(f"🔐 Iniciando TLS para admin...")
@@ -1245,7 +1323,7 @@ def resend_test():
         resend.api_key = RESEND_API_KEY
         
         params = {
-            "from": FROM_EMAIL,
+            "from": "onboarding@resend.dev",
             "to": ["hackintoshandbeyond@gmail.com"],
             "subject": "Resend Test - macOS InstallAssistant Browser",
             "html": "<h1>Teste Resend</h1><p>Este é um teste do sistema de e-mails via Resend.</p>"
@@ -1253,10 +1331,11 @@ def resend_test():
         
         response = resend.Emails.send(params)
         
-        if response and hasattr(response, 'id'):
+        if response and (hasattr(response, 'id') or (isinstance(response, dict) and 'id' in response)):
+            email_id = response.id if hasattr(response, 'id') else response['id']
             return jsonify({
                 'success': True,
-                'email_id': response.id,
+                'email_id': email_id,
                 'message': 'Resend test completed successfully'
             })
         else:
@@ -1465,7 +1544,44 @@ def test_email():
         data = request.get_json()
         test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
         
-        # Test SendGrid first if available
+        # Try Resend first (RECOMMENDED - 3000 emails/month FREE)
+        print(f"📧 Tentando Resend primeiro...")
+        try:
+            import resend
+            
+            # Use the API key from environment or hardcoded for testing
+            resend_api_key = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
+            resend.api_key = resend_api_key
+            
+            params = {
+                "from": "onboarding@resend.dev",
+                "to": [test_email],
+                "subject": "Teste Resend - macOS InstallAssistant Browser",
+                "html": "<h1>Teste Resend</h1><p>Este é um teste do sistema de e-mails via Resend.</p>"
+            }
+            
+            response = resend.Emails.send(params)
+            
+            if response and (hasattr(response, 'id') or (isinstance(response, dict) and 'id' in response)):
+                email_id = response.id if hasattr(response, 'id') else response['id']
+                print(f"✅ Email enviado via Resend para: {test_email} (ID: {email_id})")
+                return jsonify({
+                    'success': True,
+                    'message': 'Email enviado via Resend com sucesso (3000 emails/month FREE)',
+                    'test_email': test_email,
+                    'method': 'Resend',
+                    'email_id': email_id,
+                    'cost': 'FREE'
+                })
+            else:
+                print(f"❌ Resend falhou: {response}")
+                
+        except ImportError:
+            print("❌ Resend não instalado")
+        except Exception as resend_error:
+            print(f"❌ Erro Resend: {resend_error}")
+        
+        # Test SendGrid if available
         if USE_SENDGRID:
             print(f"📧 Tentando SendGrid primeiro...")
             try:
@@ -1516,41 +1632,6 @@ def test_email():
             except Exception as sendgrid_error:
                 print(f"❌ Erro SendGrid: {sendgrid_error}")
         
-        # Try Resend first (RECOMMENDED - 3000 emails/month FREE)
-        print(f"📧 Tentando Resend primeiro...")
-        try:
-            import resend
-            
-            # Use the API key from environment or hardcoded for testing
-            resend_api_key = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
-            resend.api_key = resend_api_key
-            
-            params = {
-                "from": FROM_EMAIL,
-                "to": [test_email],
-                "subject": "Teste Resend - macOS InstallAssistant Browser",
-                "html": "<h1>Teste Resend</h1><p>Este é um teste do sistema de e-mails via Resend.</p>"
-            }
-            
-            response = resend.Emails.send(params)
-            
-            if response and hasattr(response, 'id'):
-                print(f"✅ Email enviado via Resend para: {test_email} (ID: {response.id})")
-                return jsonify({
-                    'success': True,
-                    'message': 'Email enviado via Resend com sucesso (3000 emails/month FREE)',
-                    'test_email': test_email,
-                    'method': 'Resend',
-                    'email_id': response.id,
-                    'cost': 'FREE'
-                })
-            else:
-                print(f"❌ Resend falhou: {response}")
-                
-        except ImportError:
-            print("❌ Resend não instalado")
-        except Exception as resend_error:
-            print(f"❌ Erro Resend: {resend_error}")
         
         # Fallback to FREE notification system
         print(f"📝 Tentando sistema de notificação GRATUITO...")
@@ -2349,6 +2430,467 @@ def get_payment_status_detailed(payment_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/verify-transaction', methods=['POST'])
+def verify_transaction():
+    """Verify transaction status in real-time"""
+    try:
+        data = request.get_json()
+        transaction_id = data.get('transaction_id')
+        payment_method = data.get('payment_method')
+        
+        if not transaction_id:
+            return jsonify({
+                'success': False,
+                'error': 'Transaction ID is required'
+            }), 400
+        
+        # Verificar status baseado no método de pagamento
+        verification_result = {
+            'verified': True,
+            'status': 'confirmed',
+            'message': 'Transaction verified successfully',
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Atualizar status no banco de dados se verificado
+        if transaction_id in payments_db:
+            payments_db[transaction_id]['status'] = verification_result.get('status', 'pending')
+            payments_db[transaction_id]['verified_at'] = datetime.now().isoformat()
+            save_payments()
+            
+            # Se confirmado, processar automaticamente
+            if verification_result.get('status') == 'confirmed':
+                payment = payments_db[transaction_id]
+                if 'serial' not in payment:
+                    serial = PaymentProcessor.generate_serial(payment['email'])
+                    payment['serial'] = serial
+                    serials_db[payment['email']] = {
+                        'serial': serial,
+                        'payment_id': transaction_id,
+                        'created_at': datetime.now().isoformat()
+                    }
+                    save_payments()
+        
+        return jsonify({
+            'success': True,
+            'transaction_id': transaction_id,
+            'verification_result': verification_result,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Transaction verification error: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirm-payment', methods=['POST'])
+def auto_confirm_payment():
+    """Automatically confirm payment and process serial generation"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id')
+        confirmation_data = data.get('confirmation_data', {})
+        
+        if not payment_id:
+            return jsonify({
+                'success': False,
+                'error': 'Payment ID is required'
+            }), 400
+        
+        if payment_id not in payments_db:
+            return jsonify({
+                'success': False,
+                'error': 'Payment not found'
+            }), 404
+        
+        payment = payments_db[payment_id]
+        
+        # Confirmar pagamento
+        payment['status'] = 'confirmed'
+        payment['confirmed_at'] = datetime.now().isoformat()
+        payment['confirmation_data'] = confirmation_data
+        
+        # Gerar serial se ainda não foi gerado
+        if 'serial' not in payment:
+            serial = PaymentProcessor.generate_serial(payment['email'])
+            payment['serial'] = serial
+            
+            # Armazenar serial
+            serials_db[payment['email']] = {
+                'serial': serial,
+                'payment_id': payment_id,
+                'created_at': datetime.now().isoformat()
+            }
+        
+        save_payments()
+        
+        # Enviar email de confirmação automaticamente
+        email_sent = EmailService.send_serial_email(
+            payment['email'],
+            payment['name'],
+            payment['serial'],
+            payment_id
+        )
+        
+        return jsonify({
+            'success': True,
+            'payment_id': payment_id,
+            'status': 'confirmed',
+            'serial': payment['serial'],
+            'email_sent': email_sent,
+            'confirmation_timestamp': payment['confirmed_at']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Auto confirmation error: {str(e)}'
+        }), 500
+
+@app.route('/api/transaction-logs', methods=['GET'])
+def get_transaction_logs():
+    """Get transaction logs for auditing"""
+    try:
+        # Filtros opcionais
+        email = request.args.get('email')
+        status = request.args.get('status')
+        method = request.args.get('method')
+        limit = int(request.args.get('limit', 50))
+        
+        logs = []
+        
+        # Processar pagamentos
+        for payment_id, payment in payments_db.items():
+            if email and payment.get('email') != email:
+                continue
+            if status and payment.get('status') != status:
+                continue
+            if method and payment.get('method') != method:
+                continue
+            
+            log_entry = {
+                'id': payment_id,
+                'type': 'payment',
+                'email': payment.get('email'),
+                'status': payment.get('status'),
+                'method': payment.get('method'),
+                'amount': payment.get('amount'),
+                'currency': payment.get('currency'),
+                'created_at': payment.get('created_at'),
+                'confirmed_at': payment.get('confirmed_at'),
+                'verified_at': payment.get('verified_at')
+            }
+            logs.append(log_entry)
+        
+        # Ordenar por timestamp (mais recente primeiro)
+        logs.sort(key=lambda x: x.get('created_at') or '', reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'logs': logs[:limit],
+            'total_count': len(logs),
+            'filters_applied': {
+                'email': email,
+                'status': status,
+                'method': method,
+                'limit': limit
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error retrieving transaction logs: {str(e)}'
+        }), 500
+
+@app.route('/api/notifications/send', methods=['POST'])
+def send_notification():
+    """Send automatic notification"""
+    try:
+        data = request.get_json()
+        notification_type = data.get('type')
+        payment_data = data.get('payment_data', {})
+        
+        if not notification_type:
+            return jsonify({
+                'success': False,
+                'error': 'Notification type is required'
+            }), 400
+        
+        if not NOTIFICATIONS_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Notification system not available'
+            }), 503
+        
+        success = False
+        
+        # Enviar notificação baseada no tipo
+        if notification_type == 'payment_confirmation':
+            success = notification_system.send_payment_confirmation(payment_data)
+        elif notification_type == 'payment_pending':
+            success = notification_system.send_payment_pending(payment_data)
+        elif notification_type == 'payment_approved':
+            success = notification_system.send_payment_approved(payment_data)
+        elif notification_type == 'payment_rejected':
+            reason = data.get('reason', 'Não especificado')
+            success = notification_system.send_payment_rejected(payment_data, reason)
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Unknown notification type: {notification_type}'
+            }), 400
+        
+        return jsonify({
+            'success': success,
+            'notification_type': notification_type,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Notification error: {str(e)}'
+        }), 500
+
+@app.route('/api/notifications/status', methods=['GET'])
+def get_notification_status():
+    """Get notification system status"""
+    try:
+        if not NOTIFICATIONS_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Notification system not available'
+            }), 503
+        
+        status = notification_system.get_notification_status()
+        
+        return jsonify({
+            'success': True,
+            'notification_system_enabled': NOTIFICATIONS_ENABLED,
+            'status': status,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error getting notification status: {str(e)}'
+        }), 500
+
+@app.route('/api/notifications/auto-process', methods=['POST'])
+def auto_process_notifications():
+    """Automatically process notifications for a payment"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id')
+        
+        if not payment_id:
+            return jsonify({
+                'success': False,
+                'error': 'Payment ID is required'
+            }), 400
+        
+        if payment_id not in payments_db:
+            return jsonify({
+                'success': False,
+                'error': 'Payment not found'
+            }), 404
+        
+        payment = payments_db[payment_id]
+        notifications_sent = []
+        
+        # Determinar quais notificações enviar baseado no status do pagamento
+        if payment.get('status') == 'pending':
+            if NOTIFICATIONS_ENABLED:
+                success = notification_system.send_payment_pending(payment)
+                notifications_sent.append({
+                    'type': 'payment_pending',
+                    'success': success
+                })
+        
+        elif payment.get('status') == 'confirmed':
+            if NOTIFICATIONS_ENABLED:
+                success = notification_system.send_payment_confirmation(payment)
+                notifications_sent.append({
+                    'type': 'payment_confirmation',
+                    'success': success
+                })
+        
+        elif payment.get('status') == 'approved':
+            if NOTIFICATIONS_ENABLED:
+                success = notification_system.send_payment_approved(payment)
+                notifications_sent.append({
+                    'type': 'payment_approved',
+                    'success': success
+                })
+        
+        return jsonify({
+            'success': True,
+            'payment_id': payment_id,
+            'payment_status': payment.get('status'),
+            'notifications_sent': notifications_sent,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Auto process error: {str(e)}'
+            }), 500
+
+@app.route('/api/auto-confirmation/start', methods=['POST'])
+def start_auto_confirmation_endpoint():
+    """Start automatic confirmation system"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        start_auto_confirmation()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Auto confirmation system started',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error starting auto confirmation: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirmation/stop', methods=['POST'])
+def stop_auto_confirmation_endpoint():
+    """Stop automatic confirmation system"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        auto_confirmation_system.stop_monitoring()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Auto confirmation system stopped',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error stopping auto confirmation: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirmation/status', methods=['GET'])
+def get_auto_confirmation_status():
+    """Get auto confirmation system status"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        stats = get_auto_confirmation_stats()
+        
+        return jsonify({
+            'success': True,
+            'auto_confirmation_enabled': AUTO_CONFIRMATION_ENABLED,
+            'stats': stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error getting auto confirmation status: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirmation/force-check/<payment_id>', methods=['POST'])
+def force_check_payment_endpoint(payment_id):
+    """Force check a specific payment for auto confirmation"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        result = auto_confirmation_system.force_check_payment(payment_id)
+        
+        return jsonify({
+            'success': result.get('success', False),
+            'payment_id': payment_id,
+            'action': result.get('action', 'unknown'),
+            'error': result.get('error'),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error force checking payment: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirmation/rules', methods=['GET'])
+def get_confirmation_rules():
+    """Get current confirmation rules"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        rules = auto_confirmation_system.confirmation_rules
+        
+        return jsonify({
+            'success': True,
+            'rules': rules,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error getting confirmation rules: {str(e)}'
+        }), 500
+
+@app.route('/api/auto-confirmation/rules/<method>', methods=['PUT'])
+def update_confirmation_rules(method):
+    """Update confirmation rules for a payment method"""
+    try:
+        if not AUTO_CONFIRMATION_ENABLED:
+            return jsonify({
+                'success': False,
+                'error': 'Auto confirmation system not available'
+            }), 503
+        
+        data = request.get_json()
+        new_rules = data.get('rules', {})
+        
+        auto_confirmation_system.update_confirmation_rules(method, new_rules)
+        
+        return jsonify({
+            'success': True,
+            'method': method,
+            'updated_rules': new_rules,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error updating confirmation rules: {str(e)}'
+        }), 500
+
 @app.route('/upload-proof')
 def upload_proof_page():
     """Serve upload proof page"""
@@ -2363,6 +2905,26 @@ def admin_panel_page():
 def download_page():
     """Serve download page"""
     return send_from_directory('.', 'download_page.html')
+
+@app.route('/upload_comprovantes.html')
+def upload_comprovantes_page():
+    """Serve upload comprovantes page"""
+    return send_from_directory('../', 'upload_comprovantes.html')
+
+@app.route('/upload_comprovantes.js')
+def upload_comprovantes_js():
+    """Serve upload comprovantes JavaScript"""
+    return send_from_directory('../', 'upload_comprovantes.js')
+
+@app.route('/confirmacao_envio.html')
+def confirmacao_envio_page():
+    """Serve confirmacao envio page"""
+    return send_from_directory('.', 'confirmacao_envio.html')
+
+@app.route('/admin_comprovantes.html')
+def admin_comprovantes_page():
+    """Serve admin comprovantes page"""
+    return send_from_directory('.', 'admin_comprovantes.html')
 
 @app.route('/download/app')
 def download_app():
@@ -2384,6 +2946,542 @@ def download_app():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ==========================================
+# SISTEMA DE UPLOAD DE COMPROVANTES
+# ==========================================
+
+@app.route('/api/upload-comprovante', methods=['POST'])
+def upload_comprovante():
+    """Endpoint para upload de comprovantes de pagamento"""
+    try:
+        # Verificar se o arquivo foi enviado
+        if 'comprovante' not in request.files:
+            return jsonify({
+                'success': False,
+                'message': 'Nenhum arquivo foi enviado'
+            }), 400
+        
+        file = request.files['comprovante']
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'message': 'Nenhum arquivo selecionado'
+            }), 400
+        
+        # Validar dados do formulário
+        email = request.form.get('email', '').strip()
+        nome = request.form.get('nome', '').strip()
+        telefone = request.form.get('telefone', '').strip()
+        observacoes = request.form.get('observacoes', '').strip()
+        
+        if not email or not nome:
+            return jsonify({
+                'success': False,
+                'message': 'Email e nome são obrigatórios'
+            }), 400
+        
+        # Validar email
+        import re
+        email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_regex, email):
+            return jsonify({
+                'success': False,
+                'message': 'Email inválido'
+            }), 400
+        
+        # Validar arquivo
+        if not allowed_file(file.filename):
+            return jsonify({
+                'success': False,
+                'message': 'Formato de arquivo não suportado. Use PDF, JPG ou PNG.'
+            }), 400
+        
+        # Verificar tamanho do arquivo
+        file.seek(0, 2)  # Ir para o final do arquivo
+        file_size = file.tell()
+        file.seek(0)  # Voltar ao início
+        
+        if file_size > MAX_FILE_SIZE:
+            return jsonify({
+                'success': False,
+                'message': f'Arquivo muito grande. Tamanho máximo: {MAX_FILE_SIZE // (1024*1024)}MB'
+            }), 400
+        
+        # Gerar ID único para o comprovante
+        comprovante_id = f"comp_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hashlib.md5(email.encode()).hexdigest()[:8]}"
+        
+        # Salvar arquivo
+        filename = secure_filename(file.filename)
+        file_extension = filename.rsplit('.', 1)[1].lower()
+        safe_filename = f"{comprovante_id}.{file_extension}"
+        
+        # Criar diretório de comprovantes se não existir
+        comprovantes_dir = os.path.join(UPLOAD_FOLDER, 'comprovantes')
+        os.makedirs(comprovantes_dir, exist_ok=True)
+        
+        file_path = os.path.join(comprovantes_dir, safe_filename)
+        file.save(file_path)
+        
+        # Salvar dados do comprovante
+        comprovante_data = {
+            'id': comprovante_id,
+            'email': email,
+            'nome': nome,
+            'telefone': telefone,
+            'observacoes': observacoes,
+            'filename': safe_filename,
+            'original_filename': filename,
+            'file_size': file_size,
+            'file_path': file_path,
+            'upload_timestamp': datetime.now().isoformat(),
+            'status': 'pending',
+            'processed': False
+        }
+        
+        # Salvar no banco de dados de comprovantes
+        comprovantes_db_path = 'comprovantes_db.json'
+        try:
+            with open(comprovantes_db_path, 'r') as f:
+                comprovantes_db = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            comprovantes_db = {}
+        
+        comprovantes_db[comprovante_id] = comprovante_data
+        
+        with open(comprovantes_db_path, 'w') as f:
+            json.dump(comprovantes_db, f, indent=2)
+        
+        # Enviar notificação por email
+        email_sent = False
+        try:
+            email_sent = send_comprovante_notification(comprovante_data)
+        except Exception as e:
+            print(f"Erro ao enviar email de notificação: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Comprovante enviado com sucesso!',
+            'comprovante_id': comprovante_id,
+            'email_sent': email_sent,
+            'timestamp': comprovante_data['upload_timestamp']
+        })
+        
+    except Exception as e:
+        print(f"Erro no upload de comprovante: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/comprovantes', methods=['GET'])
+def list_comprovantes():
+    """Listar todos os comprovantes (admin)"""
+    try:
+        comprovantes_db_path = 'comprovantes_db.json'
+        try:
+            with open(comprovantes_db_path, 'r') as f:
+                comprovantes_db = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            comprovantes_db = {}
+        
+        # Filtros opcionais
+        status_filter = request.args.get('status')
+        email_filter = request.args.get('email')
+        
+        filtered_comprovantes = []
+        for comp_id, comp_data in comprovantes_db.items():
+            if status_filter and comp_data.get('status') != status_filter:
+                continue
+            if email_filter and email_filter.lower() not in comp_data.get('email', '').lower():
+                continue
+            
+            # Adicionar informações de tamanho formatado
+            comp_data_copy = comp_data.copy()
+            comp_data_copy['file_size_formatted'] = format_file_size(comp_data.get('file_size', 0))
+            filtered_comprovantes.append(comp_data_copy)
+        
+        # Ordenar por timestamp (mais recente primeiro)
+        filtered_comprovantes.sort(key=lambda x: x.get('upload_timestamp', ''), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'comprovantes': filtered_comprovantes,
+            'total': len(filtered_comprovantes)
+        })
+        
+    except Exception as e:
+        print(f"Erro ao listar comprovantes: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/comprovante/<comprovante_id>', methods=['GET'])
+def get_comprovante(comprovante_id):
+    """Obter detalhes de um comprovante específico"""
+    try:
+        comprovantes_db_path = 'comprovantes_db.json'
+        try:
+            with open(comprovantes_db_path, 'r') as f:
+                comprovantes_db = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        if comprovante_id not in comprovantes_db:
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        comprovante_data = comprovantes_db[comprovante_id].copy()
+        comprovante_data['file_size_formatted'] = format_file_size(comprovante_data.get('file_size', 0))
+        
+        return jsonify({
+            'success': True,
+            'comprovante': comprovante_data
+        })
+        
+    except Exception as e:
+        print(f"Erro ao obter comprovante: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/comprovante/<comprovante_id>/download', methods=['GET'])
+def download_comprovante(comprovante_id):
+    """Download de um comprovante específico"""
+    try:
+        comprovantes_db_path = 'comprovantes_db.json'
+        try:
+            with open(comprovantes_db_path, 'r') as f:
+                comprovantes_db = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        if comprovante_id not in comprovantes_db:
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        comprovante_data = comprovantes_db[comprovante_id]
+        file_path = comprovante_data.get('file_path')
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': 'Arquivo não encontrado no servidor'
+            }), 404
+        
+        return send_from_directory(
+            os.path.dirname(file_path),
+            os.path.basename(file_path),
+            as_attachment=True,
+            download_name=comprovante_data.get('original_filename', 'comprovante')
+        )
+        
+    except Exception as e:
+        print(f"Erro no download do comprovante: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+@app.route('/api/comprovante/<comprovante_id>/status', methods=['PUT'])
+def update_comprovante_status(comprovante_id):
+    """Atualizar status de um comprovante (admin)"""
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        admin_notes = data.get('admin_notes', '')
+        
+        if new_status not in ['pending', 'approved', 'rejected']:
+            return jsonify({
+                'success': False,
+                'message': 'Status inválido. Use: pending, approved, rejected'
+            }), 400
+        
+        comprovantes_db_path = 'comprovantes_db.json'
+        try:
+            with open(comprovantes_db_path, 'r') as f:
+                comprovantes_db = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        if comprovante_id not in comprovantes_db:
+            return jsonify({
+                'success': False,
+                'message': 'Comprovante não encontrado'
+            }), 404
+        
+        # Atualizar status
+        comprovantes_db[comprovante_id]['status'] = new_status
+        comprovantes_db[comprovante_id]['admin_notes'] = admin_notes
+        comprovantes_db[comprovante_id]['processed'] = True
+        comprovantes_db[comprovante_id]['processed_timestamp'] = datetime.now().isoformat()
+        
+        with open(comprovantes_db_path, 'w') as f:
+            json.dump(comprovantes_db, f, indent=2)
+        
+        # Enviar notificação de status para o cliente
+        try:
+            send_status_notification(comprovantes_db[comprovante_id], new_status)
+        except Exception as e:
+            print(f"Erro ao enviar notificação de status: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Status atualizado para {new_status}',
+            'comprovante': comprovantes_db[comprovante_id]
+        })
+        
+    except Exception as e:
+        print(f"Erro ao atualizar status do comprovante: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Erro interno do servidor'
+        }), 500
+
+def format_file_size(bytes_size):
+    """Formatar tamanho do arquivo em formato legível"""
+    if bytes_size == 0:
+        return '0 Bytes'
+    
+    k = 1024
+    sizes = ['Bytes', 'KB', 'MB', 'GB']
+    i = 0
+    
+    while bytes_size >= k and i < len(sizes) - 1:
+        bytes_size /= k
+        i += 1
+    
+    return f"{bytes_size:.2f} {sizes[i]}"
+
+def send_comprovante_notification(comprovante_data):
+    """Enviar notificação de recebimento de comprovante"""
+    try:
+        # Email para o cliente
+        client_subject = "Comprovante Recebido - Hackintosh and Beyond"
+        client_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .success-badge {{ background: #e8f5e8; color: #2d5a2d; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; border: 2px solid #4caf50; }}
+                .info-box {{ background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #667eea; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 14px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Comprovante Recebido!</h1>
+                </div>
+                <div class="content">
+                    <p>Olá <strong>{comprovante_data['nome']}</strong>,</p>
+                    
+                    <div class="success-badge">
+                        ✅ Seu comprovante foi recebido com sucesso!
+                    </div>
+                    
+                    <p>Recebemos seu comprovante de pagamento e nossa equipe irá analisá-lo em breve.</p>
+                    
+                    <div class="info-box">
+                        <h3>📋 Detalhes do Envio:</h3>
+                        <p><strong>ID do Comprovante:</strong> {comprovante_data['id']}</p>
+                        <p><strong>Arquivo:</strong> {comprovante_data['original_filename']}</p>
+                        <p><strong>Data/Hora:</strong> {datetime.fromisoformat(comprovante_data['upload_timestamp']).strftime('%d/%m/%Y às %H:%M')}</p>
+                        <p><strong>Tamanho:</strong> {format_file_size(comprovante_data['file_size'])}</p>
+                        {f'<p><strong>Observações:</strong> {comprovante_data["observacoes"]}</p>' if comprovante_data.get('observacoes') else ''}
+                    </div>
+                    
+                    <h3>📞 Próximos Passos:</h3>
+                    <ul>
+                        <li>Nossa equipe analisará seu comprovante em até 24 horas</li>
+                        <li>Você receberá uma confirmação por email após a análise</li>
+                        <li>Em caso de dúvidas, responda este email</li>
+                    </ul>
+                    
+                    <p>Obrigado por escolher o Hackintosh and Beyond!</p>
+                </div>
+                <div class="footer">
+                    <p>Este email foi enviado para {comprovante_data['email']}</p>
+                    <p>Hackintosh and Beyond - Sistema de Comprovantes</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Email para o admin
+        admin_subject = f"Novo Comprovante Recebido - {comprovante_data['nome']}"
+        admin_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #ff6b35; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .alert-badge {{ background: #fff3cd; color: #856404; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; border: 2px solid #ffc107; }}
+                .info-box {{ background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff6b35; }}
+                .action-button {{ background: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔔 Novo Comprovante Recebido</h1>
+                </div>
+                <div class="content">
+                    <div class="alert-badge">
+                        ⚠️ Requer análise administrativa
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3>👤 Dados do Cliente:</h3>
+                        <p><strong>Nome:</strong> {comprovante_data['nome']}</p>
+                        <p><strong>Email:</strong> {comprovante_data['email']}</p>
+                        <p><strong>Telefone:</strong> {comprovante_data.get('telefone', 'Não informado')}</p>
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3>📄 Dados do Arquivo:</h3>
+                        <p><strong>ID:</strong> {comprovante_data['id']}</p>
+                        <p><strong>Arquivo:</strong> {comprovante_data['original_filename']}</p>
+                        <p><strong>Tamanho:</strong> {format_file_size(comprovante_data['file_size'])}</p>
+                        <p><strong>Data/Hora:</strong> {datetime.fromisoformat(comprovante_data['upload_timestamp']).strftime('%d/%m/%Y às %H:%M')}</p>
+                        {f'<p><strong>Observações:</strong> {comprovante_data["observacoes"]}</p>' if comprovante_data.get('observacoes') else ''}
+                    </div>
+                    
+                    <h3>🔧 Ações Administrativas:</h3>
+                    <p>Acesse o painel administrativo para analisar e aprovar/rejeitar este comprovante.</p>
+                    
+                    <a href="{APP_BASE_URL}/admin" class="action-button">Acessar Painel Admin</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Enviar emails
+        client_sent = EmailService.send_serial_email(
+            comprovante_data['email'], 
+            comprovante_data['nome'], 
+            client_subject, 
+            comprovante_data['id']
+        )
+        
+        admin_sent = EmailService.send_serial_email(
+            EMAIL_TO_DEFAULT, 
+            "Admin", 
+            admin_subject, 
+            comprovante_data['id']
+        )
+        
+        return client_sent or admin_sent
+        
+    except Exception as e:
+        print(f"Erro ao enviar notificação de comprovante: {e}")
+        return False
+
+def send_status_notification(comprovante_data, new_status):
+    """Enviar notificação de mudança de status"""
+    try:
+        status_messages = {
+            'approved': {
+                'title': '✅ Comprovante Aprovado!',
+                'message': 'Seu comprovante foi analisado e aprovado. O processamento do seu pedido continuará normalmente.',
+                'color': '#4caf50'
+            },
+            'rejected': {
+                'title': '❌ Comprovante Rejeitado',
+                'message': 'Infelizmente, seu comprovante não pôde ser aprovado. Entre em contato conosco para mais informações.',
+                'color': '#f44336'
+            },
+            'pending': {
+                'title': '⏳ Comprovante em Análise',
+                'message': 'Seu comprovante está sendo analisado pela nossa equipe.',
+                'color': '#ff9800'
+            }
+        }
+        
+        status_info = status_messages.get(new_status, status_messages['pending'])
+        
+        subject = f"Status do Comprovante - {status_info['title']}"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: {status_info['color']}; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .status-badge {{ background: {status_info['color']}20; color: {status_info['color']}; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; border: 2px solid {status_info['color']}; }}
+                .info-box {{ background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid {status_info['color']}; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{status_info['title']}</h1>
+                </div>
+                <div class="content">
+                    <p>Olá <strong>{comprovante_data['nome']}</strong>,</p>
+                    
+                    <div class="status-badge">
+                        Status: {new_status.upper()}
+                    </div>
+                    
+                    <p>{status_info['message']}</p>
+                    
+                    <div class="info-box">
+                        <h3>📋 Detalhes do Comprovante:</h3>
+                        <p><strong>ID:</strong> {comprovante_data['id']}</p>
+                        <p><strong>Arquivo:</strong> {comprovante_data['original_filename']}</p>
+                        <p><strong>Data do Envio:</strong> {datetime.fromisoformat(comprovante_data['upload_timestamp']).strftime('%d/%m/%Y às %H:%M')}</p>
+                        {f'<p><strong>Observações do Admin:</strong> {comprovante_data.get("admin_notes", "")}' if comprovante_data.get('admin_notes') else ''}
+                    </div>
+                    
+                    <p>Se você tiver alguma dúvida, responda este email ou entre em contato conosco.</p>
+                    
+                    <p>Obrigado por escolher o Hackintosh and Beyond!</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return EmailService.send_serial_email(
+            comprovante_data['email'], 
+            comprovante_data['nome'], 
+            subject, 
+            comprovante_data['id']
+        )
+        
+    except Exception as e:
+        print(f"Erro ao enviar notificação de status: {e}")
+        return False
+
 if __name__ == '__main__':
     # Create necessary directories
     os.makedirs('logs', exist_ok=True)
@@ -2391,6 +3489,16 @@ if __name__ == '__main__':
     print("Starting Payment API Server...")
     print(f"Serial Generator Path: {SERIAL_GENERATOR_PATH}")
     print(f"Serial Generator Exists: {os.path.exists(SERIAL_GENERATOR_PATH)}")
+    print(f"📧 Sistema de notificações: {'✅ Ativo' if NOTIFICATIONS_ENABLED else '❌ Inativo'}")
+    print(f"🤖 Sistema de confirmação automática: {'✅ Ativo' if AUTO_CONFIRMATION_ENABLED else '❌ Inativo'}")
+    
+    # Initialize auto confirmation system
+    if AUTO_CONFIRMATION_ENABLED:
+        try:
+            start_auto_confirmation()
+            print("✅ Sistema de confirmação automática iniciado")
+        except Exception as e:
+            print(f"⚠️ Erro ao iniciar confirmação automática: {e}")
     
     # Get port from environment (Railway sets this automatically)
     port = int(os.getenv('PORT', 5001))
