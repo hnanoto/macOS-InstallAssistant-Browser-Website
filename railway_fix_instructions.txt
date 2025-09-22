@@ -1,0 +1,35 @@
+
+1. ACESSE O PAINEL DO RAILWAY:
+   - Vá para https://railway.app
+   - Faça login com sua conta
+   - Selecione seu projeto
+
+2. CONFIGURE AS VARIÁVEIS DE AMBIENTE:
+   - Clique em "Variables" no painel lateral
+   - Adicione as seguintes variáveis:
+
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USERNAME=hackintoshandbeyond@gmail.com
+   SMTP_PASSWORD=pvqd jzvt sjyz azwn
+   FROM_EMAIL=hackintoshandbeyond@gmail.com
+   EMAIL_FROM=hackintoshandbeyond@gmail.com
+   EMAIL_TO_DEFAULT=hackintoshandbeyond@gmail.com
+   REPLY_TO_DEFAULT=hackintoshandbeyond@gmail.com
+   RESEND_API_KEY=re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1
+   RAILWAY_ENVIRONMENT=production
+   APP_BASE_URL=https://web-production-1513a.up.railway.app
+   DEBUG=false
+
+3. REDEPLOY O PROJETO:
+   - Após configurar as variáveis, clique em "Deploy"
+   - Aguarde o deploy terminar (pode levar alguns minutos)
+
+4. TESTE NOVAMENTE:
+   - Execute este script novamente
+   - Verifique se os emails estão sendo enviados
+
+5. MONITORE OS LOGS:
+   - Vá em "Deployments" > "View Logs"
+   - Procure por mensagens de email
+   - Verifique se há erros de SMTP
