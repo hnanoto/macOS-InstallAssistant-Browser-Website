@@ -76,6 +76,12 @@ USE_SENDGRID = bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip())
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
 USE_RESEND = bool(RESEND_API_KEY and RESEND_API_KEY.strip())
 
+# Force Resend on Railway (since railway.json is not being applied)
+if IS_RAILWAY:
+    USE_RESEND = True
+    USE_SENDGRID = False
+    print("🚀 Railway detectado - Forçando uso do Resend")
+
 # Email Configuration (Updated)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'no-reply@seu-dominio.com')
 EMAIL_TO_DEFAULT = os.getenv('EMAIL_TO_DEFAULT', 'hackintoshandbeyond@gmail.com')
