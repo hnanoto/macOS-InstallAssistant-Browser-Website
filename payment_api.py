@@ -34,6 +34,27 @@ except ImportError:
     notification_system = None
     print("⚠️ Sistema de notificações não disponível")
 
+# Import email providers safely
+try:
+    import resend
+    RESEND_AVAILABLE = True
+    print("✅ Resend carregado com sucesso")
+except ImportError:
+    RESEND_AVAILABLE = False
+    resend = None
+    print("⚠️ Resend não disponível")
+
+try:
+    import sendgrid
+    from sendgrid.helpers.mail import Mail
+    SENDGRID_AVAILABLE = True
+    print("✅ SendGrid carregado com sucesso")
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    sendgrid = None
+    Mail = None
+    print("⚠️ SendGrid não disponível")
+
 # Import auto confirmation system
 try:
     from auto_confirmation_system import auto_confirmation_system, start_auto_confirmation, get_auto_confirmation_stats
@@ -324,8 +345,9 @@ class EmailService:
     def _send_via_sendgrid(email: str, subject: str, html_content: str) -> bool:
         """Send email via SendGrid API"""
         try:
-            import sendgrid
-            from sendgrid.helpers.mail import Mail
+            if not SENDGRID_AVAILABLE:
+                print("❌ SendGrid não disponível")
+                return False
 
             sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
 
@@ -356,8 +378,10 @@ class EmailService:
     def _send_via_resend(email: str, subject: str, html_content: str) -> bool:
         """Send email via Resend API"""
         try:
-            import resend
-
+            if not RESEND_AVAILABLE:
+                print("❌ Resend não disponível")
+                return False
+                
             resend.api_key = RESEND_API_KEY
 
             params = {
