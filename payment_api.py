@@ -80,6 +80,18 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Create upload directory
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Endpoint de diagnóstico para listar rotas ativas (ajuda no deploy)
+@app.route('/api/routes', methods=['GET'])
+def list_routes():
+    try:
+        routes = []
+        for rule in app.url_map.iter_rules():
+            routes.append({'rule': str(rule), 'methods': list(rule.methods or [])})
+        routes.sort(key=lambda r: r['rule'])
+        return jsonify({'success': True, 'count': len(routes), 'routes': routes})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Environment variables
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
