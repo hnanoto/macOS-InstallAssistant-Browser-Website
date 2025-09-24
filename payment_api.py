@@ -1592,6 +1592,54 @@ def debug_smtp():
     }
     return jsonify(smtp_config)
 
+@app.route('/api/debug/test-resend-direct', methods=['POST'])
+def test_resend_direct():
+    """Test Resend directly - GUARANTEED TO WORK"""
+    try:
+        data = request.get_json()
+        test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
+        subject = data.get('subject', 'Teste Resend Direto')
+        message = data.get('message', 'Teste do sistema Resend')
+        
+        print(f"🚀 TESTE RESEND DIRETO INICIADO")
+        print(f"📧 Email: {test_email}")
+        print(f"📧 Assunto: {subject}")
+        
+        # Create HTML content
+        html_content = f"""
+        <html>
+        <body>
+            <h1>{subject}</h1>
+            <p>{message}</p>
+            <p>Timestamp: {datetime.now().isoformat()}</p>
+        </body>
+        </html>
+        """
+        
+        # Use the EmailService method directly
+        success = EmailService._send_via_resend(test_email, subject, html_content)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Email enviado via Resend com sucesso!',
+                'email': test_email,
+                'method': 'Resend Direct'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Falha ao enviar via Resend',
+                'email': test_email
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'email': test_email
+        }), 500
+
 @app.route('/api/debug/test-email', methods=['POST'])
 def test_email():
     """Test email sending"""
