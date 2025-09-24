@@ -4210,6 +4210,173 @@ def send_status_notification(comprovante_data, new_status):
         print(f"Erro ao enviar notificação de status: {e}")
         return False
 
+#############################################
+# NOVO FLUXO: FORMULÁRIO → QR → COMPROVANTE #
+#############################################
+
+# Estados do novo fluxo
+NEW_FLOW_STATES = [
+    'created',        # formulário recebido, QR exibido
+    'under_review',   # comprovante recebido (upload/email), aguardando análise
+    'approved',       # aprovado, serial enviado
+    'rejected'        # rejeitado pelo admin
+]
+
+def _default_pix_code() -> str:
+    # Mesmo PIX do fluxo antigo (cópia e cola válido)
+    return "00020101021126580014br.gov.bcb.pix0111215727548770221Hackintosh and beyond520400005303986540526.505802BR5919HENRIQUE N DA SILVA6009SAO PAULO62070503***63046723"
+
+def _admin_log(event: dict) -> None:
+    try:
+        with open('admin_notifications.json', 'a') as f:
+            f.write(json.dumps({**event, 'timestamp': datetime.now().isoformat()}) + "\n")
+    except Exception:
+        pass
+
+@app.route('/api/payments/new', methods=['POST'])
+def api_new_payment_minimal():
+    """Cria um novo pagamento no fluxo reformulado e retorna PIX + instruções."""
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        name = (data.get('name') or 'Cliente').strip()
+        email = (data.get('email') or '').strip().lower()
+        if not email:
+            return jsonify({'success': False, 'error': 'Email é obrigatório'}), 400
+
+        payment_id = f"np_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{email.split('@')[0][:6]}"
+        payments_db[payment_id] = {
+            'id': payment_id,
+            'name': name,
+            'email': email,
+            'amount': 2650,
+            'currency': 'BRL',
+            'method': 'pix_qr_manual',
+            'status': 'created',
+            'pix_code': _default_pix_code(),
+            'created_at': datetime.now().isoformat()
+        }
+        save_payments()
+
+        _admin_log({'type': 'new_payment', 'payment_id': payment_id, 'email': email, 'name': name})
+
+        return jsonify({
+            'success': True,
+            'payment_id': payment_id,
+            'status': 'created',
+            'pix_code': payments_db[payment_id]['pix_code'],
+            'amount': 26.50,
+            'currency': 'BRL',
+            'instructions': {
+                'send_proof_to': 'hackintoshandbeyond@gmail.com',
+                'subject': f'Comprovante {payment_id}',
+                'fields': ['nome', 'email']
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/payments/upload-proof', methods=['POST'])
+def api_upload_proof_minimal():
+    """Upload de comprovante vinculado ao pagamento (multipart/form-data)."""
+    try:
+        payment_id = request.form.get('payment_id')
+        email = (request.form.get('email') or '').strip().lower()
+        file = request.files.get('file')
+
+        if not payment_id or not email or not file:
+            return jsonify({'success': False, 'error': 'payment_id, email e file são obrigatórios'}), 400
+        if payment_id not in payments_db:
+            return jsonify({'success': False, 'error': 'Pagamento não encontrado'}), 404
+        if payments_db[payment_id].get('email') != email:
+            return jsonify({'success': False, 'error': 'Email não confere com o cadastro'}), 400
+
+        filename = save_payment_proof(file, payment_id)
+        if not filename:
+            return jsonify({'success': False, 'error': 'Arquivo inválido'}), 400
+
+        payments_db[payment_id]['status'] = 'under_review'
+        payments_db[payment_id]['proof_file'] = filename
+        payments_db[payment_id]['updated_at'] = datetime.now().isoformat()
+        save_payments()
+
+        _admin_log({'type': 'proof_received', 'payment_id': payment_id, 'email': email, 'file': filename})
+
+        return jsonify({'success': True, 'status': 'under_review', 'file': filename})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/payments', methods=['GET'])
+def api_admin_list_minimal():
+    items = [v for k, v in payments_db.items() if k.startswith('np_')]
+    items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    return jsonify({'success': True, 'count': len(items), 'payments': items})
+
+@app.route('/api/admin/payments/<payment_id>/approve', methods=['POST'])
+def api_admin_approve_minimal(payment_id: str):
+    try:
+        if payment_id not in payments_db:
+            return jsonify({'success': False, 'error': 'Pagamento não encontrado'}), 404
+        rec = payments_db[payment_id]
+        serial = PaymentProcessor.generate_serial(rec['email'])
+        rec['status'] = 'approved'
+        rec['serial'] = serial
+        rec['updated_at'] = datetime.now().isoformat()
+        save_payments()
+
+        customer_ok = send_automated_customer_email(
+            rec['email'], rec.get('name') or 'Cliente', serial, payment_id, rec.get('amount', 2650), rec.get('currency', 'BRL')
+        )
+        admin_ok = send_automated_admin_notification(
+            rec['email'], rec.get('name') or 'Cliente', serial, payment_id, 'pix_qr_manual', rec.get('amount', 2650), rec.get('currency', 'BRL')
+        )
+        _admin_log({'type': 'approved', 'payment_id': payment_id, 'email': rec['email']})
+        return jsonify({'success': True, 'serial': serial, 'email_sent': customer_ok, 'notification_sent': admin_ok})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/payments/<payment_id>/reject', methods=['POST'])
+def api_admin_reject_minimal(payment_id: str):
+    try:
+        if payment_id not in payments_db:
+            return jsonify({'success': False, 'error': 'Pagamento não encontrado'}), 404
+        rec = payments_db[payment_id]
+        rec['status'] = 'rejected'
+        rec['updated_at'] = datetime.now().isoformat()
+        rec['admin_notes'] = (request.json or {}).get('reason') if request.is_json else None
+        save_payments()
+        _admin_log({'type': 'rejected', 'payment_id': payment_id, 'email': rec['email']})
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin/portal')
+def admin_portal_minimal():
+    html = """
+    <!doctype html><html><head><meta charset='utf-8'><title>Portal Admin</title>
+    <style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial;background:#f5f7fb;margin:0}
+    .wrap{max-width:1100px;margin:40px auto;padding:20px}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
+    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}th{background:#f3f4f6}
+    .badge{padding:4px 10px;border-radius:999px;background:#e5e7eb}.approved{background:#d1fae5}.under_review{background:#fef3c7}.rejected{background:#fee2e2}
+    .actions a{margin-right:8px}
+    </style></head><body><div class='wrap'>
+    <h1>Portal de Aprovação</h1><div id='list'>Carregando...</div></div>
+    <script>
+    async function load(){const r=await fetch('/api/admin/payments');const j=await r.json();
+      const rows=(j.payments||[]).map(p=>`<tr>
+        <td>${p.id}</td><td>${p.name||''}<br><small>${p.email||''}</small></td>
+        <td>R$ ${(p.amount||0)/100}</td><td><span class='badge ${p.status}'>${p.status}</span></td>
+        <td>${p.proof_file?`<a href='/uploads/${p.proof_file}' target='_blank'>ver</a>`:'-'}</td>
+        <td class='actions'><a href='#' onclick='approve("${p.id}")'>aprovar</a> <a href='#' onclick='rejectp("${p.id}")'>rejeitar</a></td>
+      </tr>`).join('');
+      document.getElementById('list').innerHTML = `<table><thead><tr><th>ID</th><th>Cliente</th><th>Valor</th><th>Status</th><th>Comprovante</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`}
+    async function approve(id){await fetch(`/api/admin/payments/${id}/approve`,{method:'POST'});load()}
+    async function rejectp(id){const reason=prompt('Motivo?')||'';await fetch(`/api/admin/payments/${id}/reject`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason})});load()}
+    load();
+    </script></body></html>
+    """
+    return render_template_string(html)
+
 if __name__ == '__main__':
     # Create necessary directories
     os.makedirs('logs', exist_ok=True)
