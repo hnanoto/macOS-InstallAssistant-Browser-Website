@@ -2600,24 +2600,58 @@ def swift_process_purchase():
         serial = PaymentProcessor.generate_serial(email)
         
         if method == 'pix':
-            # Create PIX payment
-            result = PaymentProcessor.create_pix_payment(2650, {  # R$ 26,50 in cents
+            # Prefer AbacatePay híbrido; fallback para lógica local se necessário
+            customer_payload = {
                 'email': email,
                 'name': data.get('name', 'Cliente'),
                 'country': 'BR'
-            })
-            
-            if result['success']:
+            }
+            result = None
+            try:
+                from abacatepay_hybrid_integration import get_abacatepay_hybrid
+                hybrid = get_abacatepay_hybrid()
+                # Valor em reais (float) para o híbrido
+                hybrid_result = hybrid.create_pix_payment(26.50, customer_payload)
+                if hybrid_result.get('success'):
+                    result = {
+                        'success': True,
+                        'payment_id': hybrid_result.get('payment_id'),
+                        'pix_code': hybrid_result.get('pix_code'),
+                        'amount': 26.50,
+                        'currency': 'BRL'
+                    }
+                    # Registrar como pendente (para compatibilidade com consultas locais)
+                    payments_db[result['payment_id']] = {
+                        'id': result['payment_id'],
+                        'email': email,
+                        'name': customer_payload['name'],
+                        'country': customer_payload['country'],
+                        'amount': 2650,
+                        'currency': 'BRL',
+                        'method': 'pix',
+                        'status': 'pending',
+                        'pix_code': result['pix_code'],
+                        'provider': 'abacatepay',
+                        'created_at': datetime.now().isoformat()
+                    }
+                    save_payments()
+                else:
+                    result = {'success': False, 'error': hybrid_result.get('error', 'Erro desconhecido')}
+            except Exception as _e:
+                # Falha no híbrido → fallback para fluxo local existente
+                result = PaymentProcessor.create_pix_payment(2650, customer_payload)
+
+            if result and result.get('success'):
                 return jsonify({
                     'success': True,
                     'payment_id': result['payment_id'],
-                    'pix_code': result['pix_code'],
+                    'pix_code': result.get('pix_code'),
                     'amount': 26.50,
                     'currency': 'BRL',
                     'serial': serial
                 })
             else:
-                return jsonify({'error': result['error']}), 400
+                return jsonify({'error': (result or {}).get('error', 'Erro ao criar pagamento PIX')}), 400
                 
         elif method == 'paypal':
             # For PayPal, we'll simulate the payment creation
@@ -2659,17 +2693,80 @@ def swift_confirm_payment():
     try:
         data = request.get_json()
         print(f"📥 Dados recebidos: {data}")
-        
-        if 'payment_id' not in data or 'email' not in data:
-            print(f"❌ Dados faltando: payment_id ou email")
+        # Aceita tanto payment_id quanto paymentId (compatibilidade)
+        payment_id = data.get('payment_id') or data.get('paymentId')
+        email = data.get('email')
+        if not payment_id or not email:
+            print(f"❌ Dados faltando: payment_id/paymentId ou email")
             return jsonify({'error': 'Missing payment_id or email'}), 400
-        
-        payment_id = data['payment_id']
-        email = data['email']
         print(f"💳 Tentando confirmar pagamento: {payment_id} para {email}")
         
         # Check if payment exists
         if payment_id not in payments_db:
+            # Tentar confirmar via AbacatePay híbrido se for PIX
+            if payment_id.startswith('pix_'):
+                try:
+                    from abacatepay_hybrid_integration import get_abacatepay_hybrid
+                    hybrid = get_abacatepay_hybrid()
+                    payment = hybrid.get_payment_status(payment_id)
+                    # Se estiver pendente em simulação, tentar aprovar automaticamente
+                    if payment.get('status') == 'pending' and payment.get('mode') == 'simulation':
+                        approval = hybrid.simulate_payment_approval(payment_id)
+                        if approval.get('success'):
+                            payment = hybrid.get_payment_status(payment_id)
+                    if payment.get('status') == 'approved':
+                        # Registrar e enviar emails
+                        serial = payment.get('serial') or PaymentProcessor.generate_serial(email)
+                        payments_db[payment_id] = {
+                            'id': payment_id,
+                            'email': email,
+                            'name': 'Cliente',
+                            'country': 'BR',
+                            'amount': 2650,
+                            'currency': 'BRL',
+                            'method': 'pix',
+                            'status': 'approved',
+                            'serial': serial,
+                            'provider': 'abacatepay',
+                            'approved_at': datetime.now().isoformat()
+                        }
+                        save_payments()
+                        # Enviar emails automáticos
+                        customer_success = send_automated_customer_email(
+                            email,
+                            'Cliente PIX',
+                            serial,
+                            payment_id,
+                            2650,
+                            'BRL'
+                        )
+                        admin_success = send_automated_admin_notification(
+                            email,
+                            'Cliente PIX',
+                            serial,
+                            payment_id,
+                            'pix',
+                            2650,
+                            'BRL'
+                        )
+                        return jsonify({
+                            'success': True,
+                            'payment_id': payment_id,
+                            'serial': serial,
+                            'email_sent': customer_success,
+                            'notification_sent': admin_success,
+                            'status': 'approved'
+                        })
+                    # Ainda pendente → solicitar comprovante
+                    return jsonify({
+                        'success': False,
+                        'error': 'Pagamento PIX requer aprovação manual. Envie o comprovante para aprovação.',
+                        'status': 'pending_approval',
+                        'requires_proof': True,
+                        'proof_upload_url': f'https://web-production-1513a.up.railway.app/upload-proof?payment_id={payment_id}'
+                    }), 400
+                except Exception as _e:
+                    return jsonify({'error': 'Payment not found'}), 404
             return jsonify({'error': 'Payment not found'}), 404
         
         payment = payments_db[payment_id]
