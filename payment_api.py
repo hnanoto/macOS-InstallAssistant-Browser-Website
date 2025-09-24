@@ -100,9 +100,10 @@ USE_RESEND = bool(RESEND_API_KEY and RESEND_API_KEY.strip())
 # CRITICAL FIX: Force Resend working immediately
 USE_RESEND = True
 USE_SENDGRID = False
-print("🚨 CORREÇÃO CRÍTICA APLICADA - RESEND FUNCIONANDO")
+print("🚨 CORREÇÃO CRÍTICA APLICADA - RESEND FUNCIONANDO - DEPLOY v2.0")
 print(f"🚨 USE_RESEND: {USE_RESEND}")
 print(f"🚨 USE_SENDGRID: {USE_SENDGRID}")
+print("🤖 SISTEMA AUTOMATIZADO ATIVO - v2.0")
 
 # Test Resend immediately on startup
 try:
@@ -2868,7 +2869,9 @@ def approve_payment():
                     AUTOMATED: Send emails immediately after payment approval
                     Uses direct Resend API to bypass Railway issues
                     """
+                    print(f"🚨 DEPLOY v2.0 - SISTEMA AUTOMATIZADO ATIVO!")
                     print(f"🤖 SISTEMA AUTOMATIZADO: Enviando emails para aprovação de {payment_id}")
+                    print(f"🤖 USANDO RESEND API DIRETA - BYPASS RAILWAY")
                     
                     # Customer email with activation instructions
                     customer_success = send_automated_customer_email(
