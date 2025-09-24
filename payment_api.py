@@ -1133,150 +1133,140 @@ class EmailService:
     
     @staticmethod
     def send_proof_pending_notification(customer_email: str, customer_name: str, transaction_id: str, payment_method: str, amount: int, currency: str, filename: str, is_old_payment: bool = False) -> bool:
-        """Send notification to admin about pending proof approval"""
+        """Send notification to admin about pending proof approval - USANDO RESEND DIRETAMENTE"""
         admin_email = "hackintoshandbeyond@gmail.com"
-        print(f"🔄 Tentando enviar notificação de comprovante pendente para: {admin_email}")
+        print(f"🔔 NOTIFICAÇÃO COMPROVANTE: Enviando via Resend para {admin_email}")
         print(f"👤 Cliente: {customer_name} ({customer_email})")
         print(f"📁 Arquivo: {filename}")
+        print(f"🆔 Transação: {transaction_id}")
         
-        # Verificar se SMTP está configurado corretamente
-        if not EMAIL_CONFIGURED:
-            print("⚠️ SMTP não configurado, simulando notificação...")
-            print(f"📧 NOTIFICAÇÃO PENDENTE SIMULADA PARA: {admin_email}")
-            print(f"📧 CLIENTE: {customer_name} ({customer_email})")
-            print(f"📧 TRANSAÇÃO: {transaction_id}")
-            print(f"📧 ARQUIVO: {filename}")
-            print("✅ Notificação simulada enviada com sucesso!")
-            return True
-        
+        # CORREÇÃO: Usar Resend diretamente em vez de SMTP
         try:
-            # Create email content for admin
+            import requests
+            
+            api_key = "re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1"
+            url = "https://api.resend.com/emails"
+            
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Converter valor para display
+            if currency == 'BRL':
+                amount_display = f"R$ {amount/100:.2f}"
+            else:
+                amount_display = f"${amount/100:.2f}"
+            
+            # Criar assunto baseado no tipo
             if is_old_payment:
-                subject = f"🔔 Comprovante PIX ANTIGO Enviado - Aguardando Aprovação - {transaction_id}"
+                subject = f"🔔 COMPROVANTE ANTIGO - {customer_name} - {transaction_id}"
+                urgency_class = "warning"
+                urgency_text = "PAGAMENTO ANTIGO"
             else:
-                subject = f"🔔 Comprovante PIX Enviado - Aguardando Aprovação - {transaction_id}"
-            
-            # Convert amount from cents to currency
-            if currency == 'USD':
-                amount_display = f"${amount/100:.2f} USD"
-            elif currency == 'BRL':
-                amount_display = f"R$ {amount/100:.2f} BRL"
-            else:
-                amount_display = f"{amount/100:.2f} {currency}"
-            
+                subject = f"🔔 NOVO COMPROVANTE - {customer_name} - {transaction_id}"
+                urgency_class = "success"
+                urgency_text = "NOVO PAGAMENTO"
+        
+            # Template HTML para notificação de comprovante
             html_content = f"""
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
                 <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #ff9800; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }}
-                    .info-box {{ background: white; border-left: 4px solid #ff9800; padding: 15px; margin: 15px 0; }}
-                    .urgent {{ background: #fff3cd; border-left-color: #ffc107; }}
-                    .admin-link {{ background: #e3f2fd; border-left-color: #2196f3; }}
+                    .header {{ background: {'#ffc107' if is_old_payment else '#28a745'}; color: white; padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f8f9fa; padding: 30px 20px; border-radius: 0 0 10px 10px; }}
+                    .alert {{ background: {'#fff3cd' if is_old_payment else '#d4edda'}; border: 1px solid {'#ffeaa7' if is_old_payment else '#c3e6cb'}; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                    .info {{ background: white; border-left: 4px solid {'#ffc107' if is_old_payment else '#28a745'}; padding: 15px; margin: 15px 0; }}
+                    .urgent {{ background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center; }}
+                    .button {{ display: inline-block; background: {'#ffc107' if is_old_payment else '#28a745'}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; }}
                 </style>
             </head>
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>📋 Comprovante PIX Enviado</h1>
-                        <p>macOS InstallAssistant Browser</p>
+                        <h1>🔔 COMPROVANTE RECEBIDO!</h1>
+                        <p>{urgency_text} - AÇÃO NECESSÁRIA</p>
                     </div>
-                    
                     <div class="content">
-                        <div class="info-box urgent">
-                            <h2>⚠️ AÇÃO NECESSÁRIA</h2>
-                            <p><strong>Um cliente enviou o comprovante PIX e está aguardando sua aprovação.</strong></p>
-                            {f'<p style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;"><strong>⚠️ PAGAMENTO ANTIGO:</strong> Este é um comprovante de um pagamento que não estava no banco de dados atual. O cliente pode ter feito o pagamento há algum tempo.</p>' if is_old_payment else ''}
+                        <div class="alert">
+                            <h2>📋 NOVO COMPROVANTE AGUARDANDO APROVAÇÃO</h2>
+                            <p><strong>Um cliente enviou comprovante de pagamento e está aguardando aprovação!</strong></p>
                         </div>
                         
-                        <h2>Detalhes do Pagamento</h2>
-                        <div class="info-box">
-                            <strong>Cliente:</strong> {customer_name}<br>
-                            <strong>Email:</strong> {customer_email}<br>
-                            <strong>Método:</strong> {payment_method.upper()}<br>
-                            <strong>Valor:</strong> {amount_display}<br>
-                            <strong>ID da Transação:</strong> {transaction_id}<br>
-                            <strong>Arquivo Enviado:</strong> {filename}<br>
-                            <strong>Data/Hora:</strong> {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
+                        <div class="info">
+                            <h3>👤 DADOS DO CLIENTE:</h3>
+                            <p><strong>Nome:</strong> {customer_name}</p>
+                            <p><strong>Email:</strong> {customer_email}</p>
+                            <p><strong>Valor:</strong> {amount_display}</p>
+                            <p><strong>Método:</strong> {payment_method.upper()}</p>
+                            <p><strong>ID da Transação:</strong> {transaction_id}</p>
+                            <p><strong>Arquivo:</strong> {filename}</p>
+                            <p><strong>Data/Hora:</strong> {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
                         </div>
                         
-                        <div class="info-box admin-link">
-                            <h3>🔗 Acesso Rápido ao Painel Admin</h3>
-                            <p><strong>Para verificar o comprovante e aprovar este pagamento:</strong></p>
-                            <p style="margin: 15px 0;">
-                                <a href="https://web-production-1513a.up.railway.app/admin" 
-                                   style="background: #2196f3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
-                                    🛡️ Abrir Painel Admin
-                                </a>
-                            </p>
-                            <p style="font-size: 14px; color: #666; margin-top: 10px;">
-                                <strong>URL:</strong> <a href="https://web-production-1513a.up.railway.app/admin">https://web-production-1513a.up.railway.app/admin</a>
-                            </p>
+                        <div class="urgent">
+                            <h3>⚡ AÇÃO IMEDIATA NECESSÁRIA!</h3>
+                            <p><strong>Acesse o painel administrativo para aprovar ou rejeitar este pagamento.</strong></p>
+                            <a href="https://web-production-1513a.up.railway.app/admin" class="button">
+                                🔧 ACESSAR PAINEL ADMIN
+                            </a>
                         </div>
                         
-                        <div class="info-box">
-                            <h3>📋 Instruções de Aprovação:</h3>
+                        <div class="info">
+                            <h3>📋 PRÓXIMOS PASSOS:</h3>
                             <ol>
-                                <li>Clique no botão "Abrir Painel Admin" acima</li>
-                                <li>Localize o pagamento <strong>{transaction_id}</strong></li>
-                                <li>Clique em "Ver Comprovante" para verificar o arquivo</li>
-                                <li>Verifique no seu app bancário se o PIX chegou</li>
-                                <li>Se tudo estiver correto, clique em "Aprovar"</li>
-                                <li>O serial será enviado automaticamente para o cliente</li>
+                                <li><strong>Acesse o painel administrativo</strong></li>
+                                <li><strong>Visualize o comprovante enviado</strong></li>
+                                <li><strong>Clique em "Aprovar" ou "Rejeitar"</strong></li>
+                                <li><strong>Cliente receberá email automaticamente</strong></li>
                             </ol>
                         </div>
                         
-                        <hr>
-                        <p><small>Esta é uma notificação automática do sistema de pagamentos.</small></p>
+                        <div class="alert">
+                            <h3>🤖 SISTEMA AUTOMATIZADO ATIVO</h3>
+                            <p>Após sua aprovação, o cliente receberá automaticamente:</p>
+                            <p>✅ Serial de ativação gerado</p>
+                            <p>✅ Instruções completas de instalação</p>
+                            <p>✅ Link para download do aplicativo</p>
+                            <p>✅ Informações de suporte técnico</p>
+                        </div>
                     </div>
                 </div>
             </body>
             </html>
             """
             
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = FROM_EMAIL
-            msg['To'] = admin_email
+            # Payload para Resend
+            payload = {
+                "from": "onboarding@resend.dev",
+                "to": [admin_email],
+                "subject": subject,
+                "html": html_content
+            }
             
-            # Add HTML content
-            html_part = MIMEText(html_content, 'html')
-            msg.attach(html_part)
+            print(f"📧 Enviando notificação via Resend...")
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
             
-            # Send email
-            print(f"📤 Conectando ao servidor SMTP para notificação pendente: {SMTP_SERVER}:{SMTP_PORT}")
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
-                print(f"🔐 Iniciando TLS para notificação pendente...")
-                server.starttls()
-                print(f"🔐 Fazendo login com: {SMTP_USERNAME}")
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                print(f"📨 Enviando notificação pendente para: {admin_email}")
-                server.send_message(msg)
-            
-            print(f"✅ Notificação de comprovante pendente enviada com sucesso para: {admin_email}")
-            return True
-            
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ Erro de autenticação SMTP para notificação pendente {admin_email}: {e}")
-            print(f"🔍 Verifique as credenciais SMTP no Railway")
-            return False
-        except smtplib.SMTPConnectError as e:
-            print(f"❌ Erro de conexão SMTP para notificação pendente {admin_email}: {e}")
-            print(f"🔍 Verifique se o servidor SMTP está acessível")
-            return False
-        except smtplib.SMTPException as e:
-            print(f"❌ Erro SMTP para notificação pendente {admin_email}: {e}")
-            print(f"🔍 Tipo do erro SMTP: {type(e).__name__}")
-            return False
+            if response.status_code == 200:
+                result = response.json()
+                email_id = result.get('id', 'unknown')
+                print(f"✅ NOTIFICAÇÃO ENVIADA! Email ID: {email_id}")
+                print(f"📧 Admin receberá notificação sobre: {customer_name}")
+                return True
+            else:
+                print(f"❌ Falha no envio da notificação: {response.status_code}")
+                print(f"❌ Response: {response.text}")
+                return False
+                
         except Exception as e:
-            print(f"❌ Erro geral ao enviar notificação pendente para {admin_email}: {e}")
-            print(f"🔍 Tipo do erro: {type(e).__name__}")
+            print(f"❌ Erro crítico ao enviar notificação de comprovante: {e}")
             return False
+    
+    # Código SMTP antigo removido - agora usa apenas Resend
 
 # API Routes
 
