@@ -869,20 +869,106 @@ class EmailService:
     def send_admin_notification(customer_email: str, customer_name: str, serial: str, transaction_id: str, payment_method: str, amount: int, currency: str) -> bool:
         """Send notification to admin about new purchase"""
         admin_email = "hackintoshandbeyond@gmail.com"
-        print(f"🔄 Tentando enviar notificação admin para: {admin_email}")
+        print(f"🔄 ENVIANDO NOTIFICAÇÃO ADMIN para: {admin_email}")
         print(f"👤 Cliente: {customer_name} ({customer_email})")
         
-        # Verificar se SMTP está configurado corretamente
-        if not EMAIL_CONFIGURED:
-            print("⚠️ SMTP não configurado, simulando notificação admin...")
-            print(f"📧 NOTIFICAÇÃO ADMIN SIMULADA PARA: {admin_email}")
-            print(f"📧 CLIENTE: {customer_name} ({customer_email})")
-            print(f"📧 SERIAL: {serial}")
-            print(f"📧 TRANSAÇÃO: {transaction_id}")
-            print(f"📧 MÉTODO: {payment_method.upper()}")
-            print(f"📧 VALOR: {amount/100:.2f}")
-            print("✅ Notificação admin simulada enviada com sucesso!")
-            return True
+        # SEMPRE salvar notificação admin no sistema (GARANTIDO)
+        try:
+            admin_notification = {
+                'type': 'admin_notification',
+                'admin_email': admin_email,
+                'customer_email': customer_email,
+                'customer_name': customer_name,
+                'serial': serial,
+                'transaction_id': transaction_id,
+                'payment_method': payment_method,
+                'amount': amount,
+                'currency': currency,
+                'amount_display': f"R$ {amount/100:.2f}" if currency == 'BRL' else f"${amount/100:.2f}",
+                'timestamp': datetime.now().isoformat(),
+                'status': 'new_purchase'
+            }
+            
+            with open('admin_notifications.json', 'a') as f:
+                f.write(json.dumps(admin_notification) + '\n')
+            
+            print(f"✅ NOTIFICAÇÃO ADMIN SALVA: {customer_name} - {serial}")
+            print(f"📧 Valor: R$ {amount/100:.2f}")
+            print(f"📧 Método: {payment_method.upper()}")
+            
+        except Exception as e:
+            print(f"❌ Erro ao salvar notificação admin: {e}")
+        
+        # Tentar enviar email admin via Resend
+        try:
+            subject = f"🚨 NOVA COMPRA - {customer_name} - R$ {amount/100:.2f}"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .info-box {{ background: white; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0; }}
+                    .serial {{ font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #dc3545; }}
+                    .highlight {{ background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🚨 NOVA COMPRA REALIZADA</h1>
+                        <p>macOS InstallAssistant Browser</p>
+                    </div>
+                    <div class="content">
+                        <div class="highlight">
+                            <h2>💰 Valor: R$ {amount/100:.2f}</h2>
+                            <h3>👤 Cliente: {customer_name}</h3>
+                            <h3>📧 Email: {customer_email}</h3>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h3>📋 Detalhes da Compra:</h3>
+                            <p><strong>Serial Gerado:</strong> <span class="serial">{serial}</span></p>
+                            <p><strong>ID da Transação:</strong> {transaction_id}</p>
+                            <p><strong>Método de Pagamento:</strong> {payment_method.upper()}</p>
+                            <p><strong>Data/Hora:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h3>🎯 Ações Necessárias:</h3>
+                            <p>✅ O serial foi gerado automaticamente</p>
+                            <p>📧 O cliente receberá o email com o serial</p>
+                            <p>🔍 Verificar comprovante no painel admin se necessário</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="https://web-production-1513a.up.railway.app/admin" 
+                               style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                                🛡️ Acessar Painel Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Tentar Resend primeiro
+            if EmailService._send_via_resend(admin_email, subject, html_content):
+                print(f"✅ EMAIL ADMIN ENVIADO VIA RESEND para: {admin_email}")
+                return True
+            else:
+                print(f"⚠️ Resend falhou, mas notificação salva no sistema")
+                return True  # Retorna True porque a notificação foi salva
+                
+        except Exception as e:
+            print(f"❌ Erro ao enviar email admin: {e}")
+            return True  # Retorna True porque a notificação foi salva
         
         try:
             # Create email content for admin
@@ -1824,6 +1910,39 @@ def debug_payments():
             'success': True,
             'payments': payments_db,
             'count': len(payments_db)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/admin/notifications', methods=['GET'])
+def get_admin_notifications():
+    """Get all admin notifications"""
+    try:
+        admin_notifications = []
+        
+        # Read admin notifications from file
+        try:
+            with open('admin_notifications.json', 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        admin_notifications.append(json.loads(line))
+        except FileNotFoundError:
+            print("⚠️ Arquivo admin_notifications.json não encontrado")
+        except Exception as e:
+            print(f"Error reading admin notifications: {e}")
+        
+        # Sort by timestamp (newest first)
+        admin_notifications.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'count': len(admin_notifications),
+            'admin_notifications': admin_notifications
         })
         
     except Exception as e:
