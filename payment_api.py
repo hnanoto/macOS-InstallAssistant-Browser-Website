@@ -4146,9 +4146,9 @@ if __name__ == '__main__':
     )
 # FORCE REDEPLOY - Wed Sep 24 13:49:19 -03 2025
 
-# AbacatePay Integration
+# AbacatePay Integration - Híbrida (Real + Simulação)
 try:
-    from abacatepay_routes import *
-    print('🥑 AbacatePay routes loaded successfully')
+    from abacatepay_api_routes import *
+    print('🥑 AbacatePay Híbrido carregado com sucesso')
 except ImportError as e:
-    print(f'⚠️ AbacatePay routes not available: {e}')
+    print(f'⚠️ AbacatePay Híbrido não disponível: {e}')
