@@ -4152,3 +4152,10 @@ try:
     print('🥑 AbacatePay Híbrido carregado com sucesso')
 except ImportError as e:
     print(f'⚠️ AbacatePay Híbrido não disponível: {e}')
+
+# AbacatePay Pages - Páginas de retorno
+try:
+    from abacatepay_pages import *
+    print('🥑 Páginas AbacatePay carregadas com sucesso')
+except ImportError as e:
+    print(f'⚠️ Páginas AbacatePay não disponíveis: {e}')
