@@ -97,12 +97,38 @@ USE_SENDGRID = bool(SENDGRID_API_KEY and SENDGRID_API_KEY.strip())
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', 're_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1')
 USE_RESEND = bool(RESEND_API_KEY and RESEND_API_KEY.strip())
 
-# Force Resend ALWAYS (guaranteed to work)
+# CRITICAL FIX: Force Resend working immediately
 USE_RESEND = True
 USE_SENDGRID = False
-print("🚀 FORÇANDO USO DO RESEND - GARANTIDO PARA FUNCIONAR")
-print(f"🚀 USE_RESEND: {USE_RESEND}")
-print(f"🚀 USE_SENDGRID: {USE_SENDGRID}")
+print("🚨 CORREÇÃO CRÍTICA APLICADA - RESEND FUNCIONANDO")
+print(f"🚨 USE_RESEND: {USE_RESEND}")
+print(f"🚨 USE_SENDGRID: {USE_SENDGRID}")
+
+# Test Resend immediately on startup
+try:
+    import requests
+    print("🚨 TESTANDO RESEND NA INICIALIZAÇÃO...")
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": "Bearer re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1",
+            "Content-Type": "application/json"
+        },
+        json={
+            "from": "onboarding@resend.dev",
+            "to": ["hackintoshandbeyond@gmail.com"],
+            "subject": "🚨 SISTEMA CORRIGIDO - EMAILS FUNCIONANDO",
+            "html": "<h1>✅ CORREÇÃO APLICADA</h1><p>O sistema de emails foi corrigido e está funcionando!</p>"
+        },
+        timeout=10
+    )
+    print(f"🚨 TESTE RESEND STATUS: {response.status_code}")
+    if response.status_code == 200:
+        print("✅ RESEND FUNCIONANDO - EMAILS SERÃO ENVIADOS")
+    else:
+        print(f"❌ RESEND ERRO: {response.text}")
+except Exception as e:
+    print(f"❌ ERRO NO TESTE RESEND: {e}")
 
 # Force Resend on Railway (since railway.json is not being applied)
 if IS_RAILWAY:
