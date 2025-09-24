@@ -2134,45 +2134,12 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
             "Content-Type": "application/json"
         }
         
-        # CORREÇÃO CRÍTICA: Resend test key só envia para hackintoshandbeyond@gmail.com
-        # Enviamos para admin com instruções claras de encaminhamento
+        # PRIMEIRA TENTATIVA: Enviar diretamente para o cliente
         payload = {
             "from": "onboarding@resend.dev",
-            "to": ["hackintoshandbeyond@gmail.com"],
-            "subject": f"🚨 URGENTE - Enviar Serial para {customer_name} ({customer_email})",
-            "html": f"""
-            <div style="font-family: Arial, sans-serif; padding: 20px; background: #fff3cd; border: 3px solid #ffc107; border-radius: 10px; margin-bottom: 20px;">
-                <h1 style="color: #856404; text-align: center;">🚨 AÇÃO URGENTE NECESSÁRIA!</h1>
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
-                    <h2>📧 CLIENTE AGUARDANDO EMAIL:</h2>
-                    <p><strong>Nome:</strong> {customer_name}</p>
-                    <p><strong>Email:</strong> <span style="font-size: 18px; color: #dc3545; font-weight: bold;">{customer_email}</span></p>
-                    <p><strong>Serial:</strong> <span style="font-size: 20px; color: #28a745; font-family: monospace; font-weight: bold;">{serial}</span></p>
-                    <p><strong>Transação:</strong> {transaction_id}</p>
-                    <p><strong>Valor:</strong> {amount_display}</p>
-                </div>
-                <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <h3 style="color: #721c24;">⚡ INSTRUÇÕES IMEDIATAS:</h3>
-                    <ol style="color: #721c24;">
-                        <li><strong>Copie o email abaixo</strong></li>
-                        <li><strong>Envie para:</strong> {customer_email}</li>
-                        <li><strong>Assunto:</strong> 🎉 Sua Licença macOS InstallAssistant Browser - Serial: {serial}</li>
-                        <li><strong>Envie IMEDIATAMENTE</strong> - Cliente está aguardando!</li>
-                    </ol>
-                </div>
-                <hr style="border: 2px solid #ffc107; margin: 20px 0;">
-                <div style="background: #e7f3ff; border: 2px solid #0066cc; padding: 20px; border-radius: 8px;">
-                    <h2 style="color: #0066cc;">📋 EMAIL PARA COPIAR E ENVIAR:</h2>
-                    <div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
-                        {html_content}
-                    </div>
-                </div>
-                <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
-                    <h3 style="color: #0c5460;">🔧 SOLUÇÃO PERMANENTE:</h3>
-                    <p style="color: #0c5460;">Para resolver definitivamente, configure um domínio verificado no Resend ou use uma API key de produção.</p>
-                </div>
-            </div>
-            """
+            "to": [customer_email],
+            "subject": f"🎉 Sua Licença macOS InstallAssistant Browser - Serial: {serial}",
+            "html": html_content
         }
         
         response = requests.post(url, headers=headers, json=payload, timeout=30)
@@ -2180,16 +2147,13 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
         if response.status_code == 200:
             result = response.json()
             email_id = result.get('id', 'unknown')
-            print(f"🚨 CORREÇÃO APLICADA: Email enviado para admin encaminhar ao cliente")
+            print(f"✅ EMAIL DIRETO ENVIADO: Para {customer_email}")
             print(f"📧 Email ID: {email_id}")
-            print(f"📧 Cliente: {customer_email} - Serial: {serial}")
-            print(f"⚠️ LIMITAÇÃO: Resend test key só envia para hackintoshandbeyond@gmail.com")
-            print(f"✅ SOLUÇÃO: Admin receberá email com instruções de encaminhamento")
             
-            # Log the automated email
+            # Log the successful direct email
             log_data = {
                 'timestamp': datetime.now().isoformat(),
-                'type': 'automated_customer_email_via_admin',
+                'type': 'automated_customer_email_direct',
                 'customer_email': customer_email,
                 'customer_name': customer_name,
                 'serial': serial,
@@ -2197,9 +2161,8 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
                 'amount': amount,
                 'currency': currency,
                 'email_id': email_id,
-                'status': 'sent_to_admin_for_manual_forwarding',
-                'method': 'resend_test_key_limitation_workaround',
-                'limitation': 'resend_test_key_only_allows_hackintoshandbeyond@gmail.com'
+                'status': 'sent_directly',
+                'method': 'resend_direct'
             }
             
             with open('automated_emails.json', 'a') as f:
@@ -2207,9 +2170,78 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
             
             return True
         else:
-            print(f"❌ AUTOMATIZADO: Falha no envio para admin - {response.status_code}")
-            print(f"❌ Response: {response.text}")
-            return False
+            print(f"❌ RESEND DIRETO FALHOU: {response.status_code} - {response.text}")
+            print(f"🔄 TENTANDO GMAIL SMTP...")
+            
+            # FALLBACK: Usar Gmail SMTP
+            try:
+                import smtplib
+                from email.mime.text import MIMEText
+                from email.mime.multipart import MIMEMultipart
+                
+                # Configurações Gmail
+                smtp_server = "smtp.gmail.com"
+                smtp_port = 587
+                gmail_user = "hackintoshandbeyond@gmail.com"
+                gmail_password = "sua_senha_de_app"  # Precisa ser configurada
+                
+                # Criar mensagem
+                msg = MIMEMultipart('alternative')
+                msg['From'] = gmail_user
+                msg['To'] = customer_email
+                msg['Subject'] = f"🎉 Sua Licença macOS InstallAssistant Browser - Serial: {serial}"
+                
+                # Anexar HTML
+                html_part = MIMEText(html_content, 'html')
+                msg.attach(html_part)
+                
+                # Enviar via Gmail
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(gmail_user, gmail_password)
+                server.send_message(msg)
+                server.quit()
+                
+                print(f"✅ EMAIL GMAIL ENVIADO: Para {customer_email}")
+                return True
+                
+            except Exception as smtp_error:
+                print(f"❌ GMAIL SMTP FALHOU: {smtp_error}")
+                print(f"🔄 USANDO FALLBACK PARA ADMIN...")
+                
+                # FALLBACK FINAL: Enviar para admin com instruções
+                payload_fallback = {
+                    "from": "onboarding@resend.dev",
+                    "to": ["hackintoshandbeyond@gmail.com"],
+                    "subject": f"🚨 URGENTE - Enviar Serial para {customer_name} ({customer_email})",
+                    "html": f"""
+                    <div style="background: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 10px;">
+                        <h1>🚨 CLIENTE AGUARDANDO SERIAL!</h1>
+                    </div>
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h2>📧 DADOS DO CLIENTE:</h2>
+                        <p><strong>Nome:</strong> {customer_name}</p>
+                        <p><strong>Email:</strong> {customer_email}</p>
+                        <p><strong>Serial:</strong> {serial}</p>
+                        <p><strong>Transação:</strong> {transaction_id}</p>
+                        <p><strong>Valor:</strong> {amount_display}</p>
+                    </div>
+                    <div style="background: #f8d7da; padding: 20px; border-radius: 8px;">
+                        <h3>⚡ ENVIE IMEDIATAMENTE PARA O CLIENTE:</h3>
+                        <p>Email: {customer_email}</p>
+                        <p>Serial: {serial}</p>
+                    </div>
+                    """
+                }
+                
+                response_fallback = requests.post(url, headers=headers, json=payload_fallback, timeout=30)
+                
+                if response_fallback.status_code == 200:
+                    print(f"✅ FALLBACK: Email enviado para admin encaminhar")
+                    return True
+                else:
+                    print(f"❌ FALLBACK FALHOU: {response_fallback.status_code}")
+                    return False
             
     except Exception as e:
         print(f"❌ AUTOMATIZADO: Erro crítico - {e}")
