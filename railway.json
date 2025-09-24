@@ -10,7 +10,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "gunicorn -w 2 -b 0.0.0.0:$PORT payment_api:app",
+    "startCommand": "python website/api/payment_api.py",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120
   }
