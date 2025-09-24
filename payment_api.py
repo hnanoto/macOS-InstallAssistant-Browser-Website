@@ -4159,3 +4159,14 @@ try:
     print('🥑 Páginas AbacatePay carregadas com sucesso')
 except ImportError as e:
     print(f'⚠️ Páginas AbacatePay não disponíveis: {e}')
+
+# Swift ↔ AbacatePay Bridge - Mantém app funcionando igual
+try:
+    from swift_abacatepay_bridge import enable_abacatepay_bridge
+    bridge_success = enable_abacatepay_bridge(app)
+    if bridge_success:
+        print('🌉 Bridge Swift ↔ AbacatePay ativado com sucesso')
+    else:
+        print('⚠️ Falha ao ativar Bridge Swift ↔ AbacatePay')
+except ImportError as e:
+    print(f'⚠️ Bridge Swift ↔ AbacatePay não disponível: {e}')
