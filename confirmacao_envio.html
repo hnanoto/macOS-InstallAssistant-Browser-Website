@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprovante Enviado com Sucesso - Hackintosh and Beyond</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e1e5e9;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: #212529;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        .protocol-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .protocol-number .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .protocol-number .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .next-steps {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffeaa7;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .next-steps h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .next-steps ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .next-steps li {
+            color: #856404;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .next-steps li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .email-notification {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border: 2px solid #bee5eb;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .email-notification .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .email-notification h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .email-notification p {
+            color: #0c5460;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .info-value {
+                max-width: 100%;
+                text-align: left;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .protocol-number .number {
+                font-size: 1.2rem;
+                letter-spacing: 1px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Comprovante Enviado com Sucesso!</h1>
+            <p>Seu comprovante foi recebido e está sendo processado</p>
+        </div>
+
+        <div class="content">
+            <!-- Número do Protocolo -->
+            <div class="protocol-number">
+                <div class="label">Número do Protocolo</div>
+                <div class="number" id="protocol-number">Carregando...</div>
+            </div>
+
+            <!-- Informações do Envio -->
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">📧 Email:</span>
+                    <span class="info-value" id="user-email">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👤 Nome:</span>
+                    <span class="info-value" id="user-name">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📄 Arquivo:</span>
+                    <span class="info-value" id="file-name">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📏 Tamanho:</span>
+                    <span class="info-value" id="file-size">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🕒 Data/Hora:</span>
+                    <span class="info-value" id="upload-time">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📊 Status:</span>
+                    <span class="info-value" style="color: #856404; font-weight: 700;">⏳ Aguardando Análise</span>
+                </div>
+            </div>
+
+            <!-- Notificação por Email -->
+            <div class="email-notification">
+                <div class="icon">📬</div>
+                <h4>Confirmação Enviada por Email</h4>
+                <p>Um email de confirmação foi enviado para <strong id="confirmation-email">-</strong> com todos os detalhes do seu envio e o número do protocolo.</p>
+            </div>
+
+            <!-- Próximos Passos -->
+            <div class="next-steps">
+                <h3>📋 Próximos Passos</h3>
+                <ul>
+                    <li>Seu comprovante será analisado pela nossa equipe</li>
+                    <li>Você receberá uma notificação por email sobre o status</li>
+                    <li>O processo de análise pode levar até 2 dias úteis</li>
+                    <li>Guarde o número do protocolo para consultas futuras</li>
+                </ul>
+            </div>
+
+            <!-- Ações -->
+            <div class="actions">
+                <button class="btn btn-success" onclick="copyProtocol()">
+                    📋 Copiar Protocolo
+                </button>
+                <a href="/upload_comprovantes.html" class="btn btn-primary">
+                    📤 Enviar Outro
+                </a>
+                <a href="/" class="btn btn-secondary">
+                    🏠 Página Inicial
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Hackintosh and Beyond - Sistema de Comprovantes</p>
+        </div>
+    </div>
+
+    <script>
+        // Obter dados da URL ou localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfirmationData();
+        });
+
+        function loadConfirmationData() {
+            // Tentar obter dados dos parâmetros da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const protocolNumber = urlParams.get('protocol') || localStorage.getItem('lastProtocol');
+            
+            if (protocolNumber) {
+                // Buscar detalhes do comprovante pela API
+                fetchComprovanteDetails(protocolNumber);
+            } else {
+                // Dados de exemplo se não houver protocolo
+                showExampleData();
+            }
+        }
+
+        async function fetchComprovanteDetails(protocolNumber) {
+            try {
+                const response = await fetch(`/api/comprovante/${protocolNumber}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayComprovanteData(data.comprovante);
+                } else {
+                    console.error('Erro ao buscar detalhes:', data.message);
+                    showExampleData();
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                showExampleData();
+            }
+        }
+
+        function displayComprovanteData(comprovante) {
+            document.getElementById('protocol-number').textContent = comprovante.id;
+            document.getElementById('user-email').textContent = comprovante.email;
+            document.getElementById('user-name').textContent = comprovante.nome;
+            document.getElementById('file-name').textContent = comprovante.original_filename;
+            document.getElementById('file-size').textContent = comprovante.file_size_formatted || formatFileSize(comprovante.file_size);
+            document.getElementById('confirmation-email').textContent = comprovante.email;
+            
+            // Formatar data/hora
+            const uploadDate = new Date(comprovante.upload_timestamp);
+            document.getElementById('upload-time').textContent = uploadDate.toLocaleString('pt-BR');
+        }
+
+        function showExampleData() {
+            // Dados de exemplo para demonstração
+            const exampleData = {
+                id: 'COMP-' + Date.now().toString().slice(-6),
+                email: 'usuario@exemplo.com',
+                nome: 'Usuário Exemplo',
+                original_filename: 'comprovante_exemplo.pdf',
+                file_size: 1024000,
+                upload_timestamp: new Date().toISOString()
+            };
+            
+            displayComprovanteData(exampleData);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function copyProtocol() {
+            const protocolNumber = document.getElementById('protocol-number').textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(protocolNumber).then(function() {
+                    showCopySuccess();
+                }).catch(function(err) {
+                    console.error('Erro ao copiar:', err);
+                    fallbackCopyTextToClipboard(protocolNumber);
+                });
+            } else {
+                fallbackCopyTextToClipboard(protocolNumber);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.position = 'fixed';
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    showCopyError();
+                }
+            } catch (err) {
+                console.error('Erro ao copiar:', err);
+                showCopyError();
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copiado!';
+            btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            }, 2000);
+        }
+
+        function showCopyError() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '❌ Erro ao copiar';
+            btn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            }, 2000);
+        }
+
+        // Limpar dados do localStorage após exibir
+        window.addEventListener('beforeunload', function() {
+            localStorage.removeItem('lastProtocol');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{"confirmation_id": "conf_1758417608_", "payment_id": "", "email": "teste@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:20:08.324601", "attempts": 1}
+{"confirmation_id": "conf_1758417659_", "payment_id": "", "email": "teste@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:21:08.865458", "attempts": 1}
+{"confirmation_id": "conf_1758417867_", "payment_id": "", "email": "teste_upload@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:24:32.822787", "attempts": 1}
+{"confirmation_id": "conf_1758417903_", "payment_id": "", "email": "teste_upload@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:25:06.274323", "attempts": 1}
+{"confirmation_id": "conf_1758417989_", "payment_id": "", "email": "teste_stripe@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:26:36.313199", "attempts": 1}
+{"confirmation_id": "conf_1758417989_", "payment_id": "", "email": "teste_comprovante_pequeno_txt@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:26:46.317889", "attempts": 1}
+{"confirmation_id": "conf_1758417989_", "payment_id": "", "email": "teste_comprovante_pdf@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:26:56.322848", "attempts": 1}
+{"confirmation_id": "conf_1758417989_", "payment_id": "", "email": "teste_comprovante_jpg@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:27:06.325058", "attempts": 1}
+{"confirmation_id": "conf_1758417989_", "payment_id": "", "email": "teste_comprovante_medio_txt@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:27:16.330164", "attempts": 1}
+{"confirmation_id": "conf_1758418070_", "payment_id": "", "email": "teste_web@exemplo.com", "customer_success": true, "admin_success": true, "timestamp": "2025-09-20T22:28:00.513371", "attempts": 1}

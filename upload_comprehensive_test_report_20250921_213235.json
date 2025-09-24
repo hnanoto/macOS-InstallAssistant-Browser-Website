@@ -1,0 +1,86 @@
+{
+  "summary": {
+    "total_tests": 12,
+    "successful_tests": 10,
+    "failed_tests": 2,
+    "warning_tests": 0,
+    "success_rate": 83.33333333333334,
+    "platform": "Railway Production"
+  },
+  "railway_url": "https://web-production-1513a.up.railway.app",
+  "results": [
+    {
+      "test": "Criação de arquivos de teste",
+      "status": "SUCESSO",
+      "details": "5 arquivos criados",
+      "timestamp": "2025-09-21T21:32:15.709762"
+    },
+    {
+      "test": "Railway Health Check",
+      "status": "SUCESSO",
+      "details": "Status: healthy, Latência: 478ms",
+      "timestamp": "2025-09-21T21:32:16.187840"
+    },
+    {
+      "test": "Criação de Pagamento PIX",
+      "status": "SUCESSO",
+      "details": "Payment ID: pix_20250922_003216_teste",
+      "timestamp": "2025-09-21T21:32:16.719948"
+    },
+    {
+      "test": "Upload Arquivo pequeno (1KB)",
+      "status": "SUCESSO",
+      "details": "Tamanho: 0.0MB, Tempo: 1.0s, Velocidade: 0.0MB/s",
+      "timestamp": "2025-09-21T21:32:17.683823"
+    },
+    {
+      "test": "Upload Arquivo médio (1MB)",
+      "status": "SUCESSO",
+      "details": "Tamanho: 1.0MB, Tempo: 1.5s, Velocidade: 0.7MB/s",
+      "timestamp": "2025-09-21T21:32:20.144581"
+    },
+    {
+      "test": "Upload Arquivo grande (15MB)",
+      "status": "SUCESSO",
+      "details": "Tamanho: 15.0MB, Tempo: 2.8s, Velocidade: 5.4MB/s",
+      "timestamp": "2025-09-21T21:32:23.936601"
+    },
+    {
+      "test": "Upload Arquivo muito grande (20MB)",
+      "status": "FALHOU",
+      "details": "Status: 500, Resposta: {\n  \"error\": \"413 Request Entity Too Large: The data value transmitted exceeds the capacity limit.\"\n}\n",
+      "timestamp": "2025-09-21T21:32:26.203708"
+    },
+    {
+      "test": "Upload Arquivo formato inválido (.txt)",
+      "status": "FALHOU",
+      "details": "Status: 400, Resposta: {\n  \"error\": \"Tipo de arquivo n\\u00e3o permitido. Use PNG, JPG, JPEG, GIF ou PDF.\"\n}\n",
+      "timestamp": "2025-09-21T21:32:27.654589"
+    },
+    {
+      "test": "Sistema de Notificações",
+      "status": "SUCESSO",
+      "details": "27 notificações armazenadas",
+      "timestamp": "2025-09-21T21:32:29.478334"
+    },
+    {
+      "test": "Notificações de Teste",
+      "status": "SUCESSO",
+      "details": "1 notificações de teste encontradas",
+      "timestamp": "2025-09-21T21:32:29.478355"
+    },
+    {
+      "test": "Performance de Rede",
+      "status": "SUCESSO",
+      "details": "Latência média: 681ms, Min: 452ms, Max: 1221ms",
+      "timestamp": "2025-09-21T21:32:35.396232"
+    },
+    {
+      "test": "Limpeza de Arquivos",
+      "status": "SUCESSO",
+      "details": "5 arquivos removidos",
+      "timestamp": "2025-09-21T21:32:35.400430"
+    }
+  ],
+  "timestamp": "2025-09-21T21:32:35.400655"
+}

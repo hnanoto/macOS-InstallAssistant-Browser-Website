@@ -1,0 +1,90 @@
+{
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 3,
+    "failed_tests": 10,
+    "warning_tests": 0,
+    "success_rate": 23.076923076923077
+  },
+  "results": [
+    {
+      "test": "Upload sem arquivo",
+      "status": "PASSOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:25:03.524124"
+    },
+    {
+      "test": "Upload com payment_id inválido",
+      "status": "PASSOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:25:03.527578"
+    },
+    {
+      "test": "Upload Arquivo de texto pequeno",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_comprovante_pequeno.txt\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_comprovante_pequeno.txt\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.530219"
+    },
+    {
+      "test": "Upload Arquivo PDF",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_comprovante.pdf\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_comprovante.pdf\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.532821"
+    },
+    {
+      "test": "Upload Arquivo de imagem JPG",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_comprovante.jpg\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_comprovante.jpg\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.535837"
+    },
+    {
+      "test": "Upload Arquivo de texto médio",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_comprovante_medio.txt\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_comprovante_medio.txt\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.538286"
+    },
+    {
+      "test": "Upload Arquivo binário grande",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_comprovante_grande.bin\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_comprovante_grande.bin\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.547112"
+    },
+    {
+      "test": "Upload arquivo muito grande (10MB)",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_large_file\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_large_file\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.603042"
+    },
+    {
+      "test": "Uploads simultâneos",
+      "status": "FALHOU",
+      "details": "0/3 sucessos",
+      "timestamp": "2025-09-20T22:25:03.609668"
+    },
+    {
+      "test": "Upload com fluxo de pagamento PIX",
+      "status": "PASSOU",
+      "details": "Status: 200, Resposta: {\n  \"filename\": \"test_1758417903_20250920_222503_comprovante_pequeno.txt\",\n  \"message\": \"Comprovante enviado com sucesso! Aguarde aprova\\u00e7\\u00e3o.\",\n  \"payment_id\": \"test_1758417903\",\n  \"success\":",
+      "timestamp": "2025-09-20T22:25:03.626119"
+    },
+    {
+      "test": "Upload arquivo corrompido",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_corrupted\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_corrupted\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.628773"
+    },
+    {
+      "test": "Upload com nome especial",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: {\n  \"error\": \"Payment ID \\\"test_special_name\\\" n\\u00e3o encontrado\",\n  \"payment_id\": \"test_special_name\",\n  \"success\": false\n}\n",
+      "timestamp": "2025-09-20T22:25:03.631395"
+    },
+    {
+      "test": "Performance do upload",
+      "status": "FALHOU",
+      "details": "Tempo: 0.00s, Velocidade: 1874.01 KB/s",
+      "timestamp": "2025-09-20T22:25:03.634056"
+    }
+  ],
+  "timestamp": "2025-09-20T22:25:03.634246"
+}

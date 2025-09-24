@@ -4145,3 +4145,10 @@ if __name__ == '__main__':
         debug=debug
     )
 # FORCE REDEPLOY - Wed Sep 24 13:49:19 -03 2025
+
+# AbacatePay Integration
+try:
+    from abacatepay_routes import *
+    print('🥑 AbacatePay routes loaded successfully')
+except ImportError as e:
+    print(f'⚠️ AbacatePay routes not available: {e}')

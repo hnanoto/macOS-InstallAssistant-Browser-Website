@@ -1,0 +1,40 @@
+# Dependências para testes automatizados
+# Instalar com: pip install -r requirements-test.txt
+
+# Framework de testes
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1
+pytest-xdist>=3.3.1
+pytest-timeout>=2.1.0
+pytest-html>=3.2.0
+
+# Mocking e fixtures
+responses>=0.23.3
+factory-boy>=3.3.0
+faker>=19.3.0
+
+# Manipulação de arquivos para testes
+Pillow>=10.0.0
+filetype>=1.2.0
+
+# Cliente HTTP para testes de API
+requests>=2.31.0
+requests-mock>=1.11.0
+
+# Utilitários de teste
+parameterized>=0.9.0
+freezegun>=1.2.2
+
+# Cobertura de código
+coverage>=7.2.7
+
+# Relatórios e análise
+pytest-benchmark>=4.0.0
+pytest-profiling>=1.7.0
+
+# Validação de dados
+jsonschema>=4.19.0
+
+# Utilitários para testes de upload
+werkzeug>=2.3.6

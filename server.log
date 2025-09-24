@@ -1,0 +1,98 @@
+INFO:notification_system:🚀 Processador de notificações iniciado
+INFO:auto_confirmation:🤖 Sistema de Confirmação Automática inicializado
+INFO:auto_confirmation:🔍 Iniciando loop de monitoramento
+INFO:auto_confirmation:🚀 Monitoramento automático iniciado
+✅ Sistema de notificações carregado com sucesso
+✅ Resend carregado com sucesso
+✅ SendGrid carregado com sucesso
+✅ Sistema de confirmação automática carregado com sucesso
+🚨 CORREÇÃO CRÍTICA APLICADA - RESEND FUNCIONANDO - DEPLOY v2.0
+🚨 USE_RESEND: True
+🚨 USE_SENDGRID: False
+🤖 SISTEMA AUTOMATIZADO ATIVO - v2.0
+🚨 TESTANDO RESEND NA INICIALIZAÇÃO...
+🚨 TESTE RESEND STATUS: 200
+✅ RESEND FUNCIONANDO - EMAILS SERÃO ENVIADOS
+📋 Carregados 17 pagamentos do arquivo
+Starting Payment API Server...
+Serial Generator Path: /Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/../../macOS-InstallAssistant-Browser-2/macOS-InstallAssistant-Browser-2/SerialGenerator
+Serial Generator Exists: True
+📧 Sistema de notificações: ✅ Ativo
+🤖 Sistema de confirmação automática: ✅ Ativo
+✅ Sistema de confirmação automática iniciado
+🚀 Server starting on port: 5001
+🔧 Debug mode: True
+ * Serving Flask app 'payment_api'
+ * Debug mode: on
+ERROR:auto_confirmation:💥 Erro ao buscar pagamentos pendentes: HTTPConnectionPool(host='localhost', port=5001): Max retries exceeded with url: /api/admin/pending-payments (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x1083a0ec0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.100.13:5001
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+INFO:notification_system:🚀 Processador de notificações iniciado
+INFO:auto_confirmation:🤖 Sistema de Confirmação Automática inicializado
+INFO:auto_confirmation:🔍 Iniciando loop de monitoramento
+INFO:auto_confirmation:🚀 Monitoramento automático iniciado
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 494-103-128
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:30:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:30:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:30:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:31:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:31:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:31:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:31:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:32:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:32:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:32:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:32:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:33:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:33:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:33:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:33:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:34:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:34:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:34:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:34:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:35:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:35:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:35:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:35:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:36:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:36:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:36:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:36:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:37:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:37:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:37:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:37:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:38:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:38:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:38:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:38:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:39:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:39:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:39:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:39:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:40:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:40:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:40:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:40:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:41:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:41:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:41:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:41:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:42:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:42:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:42:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:42:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:43:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:43:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:43:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:43:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:44:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:44:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:44:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:44:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -

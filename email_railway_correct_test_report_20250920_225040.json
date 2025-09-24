@@ -1,0 +1,121 @@
+{
+  "summary": {
+    "total_tests": 17,
+    "passed_tests": 6,
+    "failed_tests": 11,
+    "warning_tests": 0,
+    "success_rate": 35.294117647058826,
+    "platform": "Railway Production",
+    "test_emails": [
+      "teste.email.producao@gmail.com",
+      "hackintoshandbeyond@gmail.com",
+      "teste.entrega@outlook.com"
+    ]
+  },
+  "railway_url": "https://web-production-1513a.up.railway.app",
+  "results": [
+    {
+      "test": "Railway Health Check",
+      "status": "PASSOU",
+      "details": "Status: healthy, Versão: 1.0.0",
+      "timestamp": "2025-09-20T22:50:13.389108"
+    },
+    {
+      "test": "Endpoint /api/send-serial-email",
+      "status": "PASSOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:13.845358"
+    },
+    {
+      "test": "Endpoint /api/notifications/status",
+      "status": "FALHOU",
+      "details": "Endpoint não encontrado",
+      "timestamp": "2025-09-20T22:50:14.295667"
+    },
+    {
+      "test": "Endpoint /api/notifications/send",
+      "status": "FALHOU",
+      "details": "Endpoint não encontrado",
+      "timestamp": "2025-09-20T22:50:14.768241"
+    },
+    {
+      "test": "Endpoint /api/debug/test-email",
+      "status": "FALHOU",
+      "details": "HTTPSConnectionPool(host='web-production-1513a.up.railway.app', port=443): Read timed out. (read timeout=10)",
+      "timestamp": "2025-09-20T22:50:25.100736"
+    },
+    {
+      "test": "Endpoint /api/debug/notification-test",
+      "status": "FALHOU",
+      "details": "Endpoint não encontrado",
+      "timestamp": "2025-09-20T22:50:25.550765"
+    },
+    {
+      "test": "Email de serial enviado para teste.email.producao@gmail.com",
+      "status": "FALHOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:26.026545"
+    },
+    {
+      "test": "Email de serial enviado para hackintoshandbeyond@gmail.com",
+      "status": "FALHOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:26.496702"
+    },
+    {
+      "test": "Email de serial enviado para teste.entrega@outlook.com",
+      "status": "FALHOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:26.938404"
+    },
+    {
+      "test": "Status do Sistema de Notificações",
+      "status": "FALHOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:50:27.397670"
+    },
+    {
+      "test": "Envio de Notificação",
+      "status": "FALHOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:50:27.853686"
+    },
+    {
+      "test": "Teste de Email Debug",
+      "status": "PASSOU",
+      "details": "Email de teste enviado",
+      "timestamp": "2025-09-20T22:50:38.343783"
+    },
+    {
+      "test": "Teste de Notificação Debug",
+      "status": "FALHOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:50:38.810429"
+    },
+    {
+      "test": "Teste de Email Alternativo",
+      "status": "FALHOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:50:39.264822"
+    },
+    {
+      "test": "Tratamento de Email Inválido",
+      "status": "PASSOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:39.721155"
+    },
+    {
+      "test": "Tratamento de Dados Incompletos",
+      "status": "PASSOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:50:40.173933"
+    },
+    {
+      "test": "Performance do Sistema de Email",
+      "status": "PASSOU",
+      "details": "Tempo: 0.54s, Status: 400",
+      "timestamp": "2025-09-20T22:50:40.716542"
+    }
+  ],
+  "timestamp": "2025-09-20T22:50:40.717991"
+}

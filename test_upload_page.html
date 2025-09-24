@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Upload - Sistema de Pagamentos</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .test-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .test-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-btn:hover {
+            background: #218838;
+        }
+        
+        .test-btn.danger {
+            background: #dc3545;
+        }
+        
+        .test-btn.danger:hover {
+            background: #c82333;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Upload - Sistema de Pagamentos</h1>
+        
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="paymentId">Payment ID:</label>
+                <input type="text" id="paymentId" name="paymentId" placeholder="Digite o Payment ID" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Digite seu email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">Arquivo de Comprovante:</label>
+                <input type="file" id="file" name="file" accept=".png,.jpg,.jpeg,.gif,.pdf,.txt" required>
+                <div class="file-info" id="fileInfo" style="display: none;"></div>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">
+                📤 Enviar Comprovante
+            </button>
+        </form>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="test-section">
+            <h3>🧪 Testes Automáticos</h3>
+            <p>Clique nos botões abaixo para testar diferentes cenários:</p>
+            
+            <div class="test-buttons">
+                <button class="test-btn" onclick="createPixPayment()">Criar Pagamento PIX</button>
+                <button class="test-btn" onclick="testValidUpload()">Teste Upload Válido</button>
+                <button class="test-btn" onclick="testInvalidPaymentId()">Teste Payment ID Inválido</button>
+                <button class="test-btn" onclick="testNoFile()">Teste Sem Arquivo</button>
+                <button class="test-btn danger" onclick="testInvalidFileType()">Teste Tipo Inválido</button>
+                <button class="test-btn" onclick="testLargeFile()">Teste Arquivo Grande</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5001';
+        
+        // File input change handler
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileInfo = document.getElementById('fileInfo');
+                fileInfo.innerHTML = `
+                    <strong>Arquivo selecionado:</strong> ${file.name}<br>
+                    <strong>Tamanho:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Tipo:</strong> ${file.type || 'Desconhecido'}
+                `;
+                fileInfo.style.display = 'block';
+            }
+        });
+        
+        // Form submit handler
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const paymentId = document.getElementById('paymentId').value;
+            const email = document.getElementById('email').value;
+            const file = document.getElementById('file').files[0];
+            
+            if (!file) {
+                showResult('error', 'Por favor, selecione um arquivo.');
+                return;
+            }
+            
+            formData.append('payment_id', paymentId);
+            formData.append('email', email);
+            formData.append('file', file);
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Enviando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/upload-payment-proof`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('success', `✅ ${result.message}<br>Payment ID: ${result.payment_id}<br>Arquivo: ${result.filename}`);
+                } else {
+                    showResult('error', `❌ Erro: ${result.error}`);
+                }
+            } catch (error) {
+                showResult('error', `❌ Erro de conexão: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📤 Enviar Comprovante';
+            }
+        });
+        
+        function showResult(type, message) {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = message;
+            result.style.display = 'block';
+        }
+        
+        // Test functions
+        async function createPixPayment() {
+            try {
+                const response = await fetch(`${API_BASE}/api/enhanced/test-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'teste_upload@exemplo.com',
+                        name: 'Cliente Teste Upload',
+                        country: 'BR',
+                        method: 'pix'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const paymentId = result.test_payment.id;
+                    document.getElementById('paymentId').value = paymentId;
+                    document.getElementById('email').value = 'teste_upload@exemplo.com';
+                    showResult('success', `✅ Pagamento PIX criado com sucesso!<br>Payment ID: ${paymentId}`);
+                } else {
+                    showResult('error', `❌ Erro ao criar pagamento: ${result.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                showResult('error', `❌ Erro de conexão: ${error.message}`);
+            }
+        }
+        
+        async function testValidUpload() {
+            // First create a payment
+            await createPixPayment();
+            
+            // Wait a bit then create a test file
+            setTimeout(async () => {
+                const paymentId = document.getElementById('paymentId').value;
+                if (!paymentId) {
+                    showResult('error', '❌ Nenhum Payment ID disponível');
+                    return;
+                }
+                
+                // Create a test file
+                const testContent = 'Comprovante de pagamento PIX - Teste automático';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const file = new File([blob], 'comprovante_teste.txt', { type: 'text/plain' });
+                
+                // Simulate file input
+                const fileInput = document.getElementById('file');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Trigger file change event
+                fileInput.dispatchEvent(new Event('change'));
+                
+                // Submit form
+                document.getElementById('uploadForm').dispatchEvent(new Event('submit'));
+            }, 1000);
+        }
+        
+        async function testInvalidPaymentId() {
+            document.getElementById('paymentId').value = 'payment_inexistente_12345';
+            document.getElementById('email').value = 'teste@exemplo.com';
+            
+            // Create a test file
+            const testContent = 'Comprovante de teste';
+            const blob = new Blob([testContent], { type: 'text/plain' });
+            const file = new File([blob], 'comprovante_teste.txt', { type: 'text/plain' });
+            
+            const fileInput = document.getElementById('file');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+            
+            document.getElementById('uploadForm').dispatchEvent(new Event('submit'));
+        }
+        
+        async function testNoFile() {
+            document.getElementById('paymentId').value = 'test_no_file';
+            document.getElementById('email').value = 'teste@exemplo.com';
+            document.getElementById('file').value = '';
+            
+            document.getElementById('uploadForm').dispatchEvent(new Event('submit'));
+        }
+        
+        async function testInvalidFileType() {
+            await createPixPayment();
+            
+            setTimeout(() => {
+                // Create an invalid file type
+                const testContent = 'Arquivo executável inválido';
+                const blob = new Blob([testContent], { type: 'application/octet-stream' });
+                const file = new File([blob], 'comprovante.exe', { type: 'application/octet-stream' });
+                
+                const fileInput = document.getElementById('file');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+                
+                document.getElementById('uploadForm').dispatchEvent(new Event('submit'));
+            }, 1000);
+        }
+        
+        async function testLargeFile() {
+            await createPixPayment();
+            
+            setTimeout(() => {
+                // Create a large file (1MB)
+                const testContent = '0'.repeat(1024 * 1024); // 1MB
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                const file = new File([blob], 'comprovante_grande.txt', { type: 'text/plain' });
+                
+                const fileInput = document.getElementById('file');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+                
+                document.getElementById('uploadForm').dispatchEvent(new Event('submit'));
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

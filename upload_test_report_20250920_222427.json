@@ -1,0 +1,90 @@
+{
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 1,
+    "failed_tests": 12,
+    "warning_tests": 0,
+    "success_rate": 7.6923076923076925
+  },
+  "results": [
+    {
+      "test": "Upload sem arquivo",
+      "status": "FALHOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:24:27.375613"
+    },
+    {
+      "test": "Upload com payment_id inválido",
+      "status": "PASSOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:24:27.378515"
+    },
+    {
+      "test": "Upload Arquivo de texto pequeno",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.380518"
+    },
+    {
+      "test": "Upload Arquivo PDF",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.382630"
+    },
+    {
+      "test": "Upload Arquivo de imagem JPG",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.385502"
+    },
+    {
+      "test": "Upload Arquivo de texto médio",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.387492"
+    },
+    {
+      "test": "Upload Arquivo binário grande",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.391063"
+    },
+    {
+      "test": "Upload arquivo muito grande (10MB)",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.416971"
+    },
+    {
+      "test": "Uploads simultâneos",
+      "status": "FALHOU",
+      "details": "0/3 sucessos",
+      "timestamp": "2025-09-20T22:24:27.423419"
+    },
+    {
+      "test": "Upload com fluxo de pagamento PIX",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.441695"
+    },
+    {
+      "test": "Upload arquivo corrompido",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.444226"
+    },
+    {
+      "test": "Upload com nome especial",
+      "status": "FALHOU",
+      "details": "Status: 404, Resposta: <!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try agai",
+      "timestamp": "2025-09-20T22:24:27.446556"
+    },
+    {
+      "test": "Performance do upload",
+      "status": "FALHOU",
+      "details": "Tempo: 0.00s, Velocidade: 2347.23 KB/s",
+      "timestamp": "2025-09-20T22:24:27.448698"
+    }
+  ],
+  "timestamp": "2025-09-20T22:24:27.448892"
+}

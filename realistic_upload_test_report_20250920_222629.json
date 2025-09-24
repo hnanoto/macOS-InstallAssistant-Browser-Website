@@ -1,0 +1,99 @@
+{
+  "summary": {
+    "total_tests": 12,
+    "passed_tests": 10,
+    "failed_tests": 2,
+    "warning_tests": 0,
+    "success_rate": 83.33333333333334,
+    "created_payments": 12
+  },
+  "created_payments": [
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989",
+    "test_1758417989"
+  ],
+  "results": [
+    {
+      "test": "Upload com payment_id inválido (validação)",
+      "status": "PASSOU",
+      "details": "Status: 404",
+      "timestamp": "2025-09-20T22:26:29.133553"
+    },
+    {
+      "test": "Upload para pagamento não-PIX",
+      "status": "PASSOU",
+      "details": "Status: 400, Resposta: {\n  \"error\": \"Only PIX payments require proof upload\"\n}\n",
+      "timestamp": "2025-09-20T22:26:29.154084"
+    },
+    {
+      "test": "Upload Arquivo de texto pequeno",
+      "status": "PASSOU",
+      "details": "Status: 200, Resposta: {\n  \"filename\": \"test_1758417989_20250920_222629_comprovante_pequeno.txt\",\n  \"message\": \"Comprovante enviado com sucesso! Aguarde aprova\\u00e7\\u00e3o.\",\n  \"payment_id\": \"test_1758417989\",\n  \"success\":",
+      "timestamp": "2025-09-20T22:26:29.171851"
+    },
+    {
+      "test": "Upload Arquivo PDF",
+      "status": "PASSOU",
+      "details": "Status: 200, Resposta: {\n  \"filename\": \"test_1758417989_20250920_222629_comprovante.pdf\",\n  \"message\": \"Comprovante enviado com sucesso! Aguarde aprova\\u00e7\\u00e3o.\",\n  \"payment_id\": \"test_1758417989\",\n  \"success\": true\n}\n",
+      "timestamp": "2025-09-20T22:26:29.189250"
+    },
+    {
+      "test": "Upload Arquivo de imagem JPG",
+      "status": "PASSOU",
+      "details": "Status: 200, Resposta: {\n  \"filename\": \"test_1758417989_20250920_222629_comprovante.jpg\",\n  \"message\": \"Comprovante enviado com sucesso! Aguarde aprova\\u00e7\\u00e3o.\",\n  \"payment_id\": \"test_1758417989\",\n  \"success\": true\n}\n",
+      "timestamp": "2025-09-20T22:26:29.206920"
+    },
+    {
+      "test": "Upload Arquivo de texto médio",
+      "status": "PASSOU",
+      "details": "Status: 200, Resposta: {\n  \"filename\": \"test_1758417989_20250920_222629_comprovante_medio.txt\",\n  \"message\": \"Comprovante enviado com sucesso! Aguarde aprova\\u00e7\\u00e3o.\",\n  \"payment_id\": \"test_1758417989\",\n  \"success\": t",
+      "timestamp": "2025-09-20T22:26:29.222815"
+    },
+    {
+      "test": "Upload Arquivo binário grande",
+      "status": "FALHOU",
+      "details": "Status: 400, Resposta: {\n  \"error\": \"Tipo de arquivo n\\u00e3o permitido. Use PNG, JPG, JPEG, GIF ou PDF.\"\n}\n",
+      "timestamp": "2025-09-20T22:26:29.244226"
+    },
+    {
+      "test": "Upload arquivo grande (5MB)",
+      "status": "FALHOU",
+      "details": "Status: 400, Resposta: {\n  \"error\": \"Tipo de arquivo n\\u00e3o permitido. Use PNG, JPG, JPEG, GIF ou PDF.\"\n}\n",
+      "timestamp": "2025-09-20T22:26:29.300905"
+    },
+    {
+      "test": "Uploads simultâneos com pagamentos reais",
+      "status": "PASSOU",
+      "details": "3/3 sucessos",
+      "timestamp": "2025-09-20T22:26:29.326229"
+    },
+    {
+      "test": "Upload sem arquivo (pagamento real)",
+      "status": "PASSOU",
+      "details": "Status: 400",
+      "timestamp": "2025-09-20T22:26:29.342706"
+    },
+    {
+      "test": "Upload com extensão inválida",
+      "status": "PASSOU",
+      "details": "Status: 400, Resposta: {\n  \"error\": \"Tipo de arquivo n\\u00e3o permitido. Use PNG, JPG, JPEG, GIF ou PDF.\"\n}\n",
+      "timestamp": "2025-09-20T22:26:29.359618"
+    },
+    {
+      "test": "Performance do upload (pagamento real)",
+      "status": "PASSOU",
+      "details": "Tempo: 0.00s, Velocidade: 1125.79 KB/s",
+      "timestamp": "2025-09-20T22:26:29.376807"
+    }
+  ],
+  "timestamp": "2025-09-20T22:26:29.376989"
+}

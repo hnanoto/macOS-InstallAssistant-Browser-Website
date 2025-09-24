@@ -1,0 +1,137 @@
+{
+  "summary": {
+    "total_tests": 21,
+    "successful_tests": 21,
+    "failed_tests": 0,
+    "success_rate": 100.0
+  },
+  "results": [
+    {
+      "test": "Resolução DNS smtp.gmail.com",
+      "status": "SUCESSO",
+      "details": "IP: 172.253.122.108",
+      "timestamp": "2025-09-20T22:56:12.858359"
+    },
+    {
+      "test": "Conectividade google.com:80",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.010859"
+    },
+    {
+      "test": "Conectividade gmail.com:443",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.165347"
+    },
+    {
+      "test": "Conectividade smtp.gmail.com:587",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.288850"
+    },
+    {
+      "test": "Conectividade smtp.gmail.com:465",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.413561"
+    },
+    {
+      "test": "Conectividade smtp.gmail.com:25",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.546989"
+    },
+    {
+      "test": "Conectividade Gmail SMTP (Porta 587 - TLS)",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:13.675506"
+    },
+    {
+      "test": "Conexão SMTP Gmail SMTP (Porta 587 - TLS)",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:14.487802"
+    },
+    {
+      "test": "Login SMTP Gmail SMTP (Porta 587 - TLS)",
+      "status": "SUCESSO",
+      "details": "Servidor aceita login (credenciais incorretas)",
+      "timestamp": "2025-09-20T22:56:15.112559"
+    },
+    {
+      "test": "Conectividade Gmail SMTP (Porta 465 - SSL)",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:15.363404"
+    },
+    {
+      "test": "Conexão SMTP Gmail SMTP (Porta 465 - SSL)",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:15.726817"
+    },
+    {
+      "test": "Login SMTP Gmail SMTP (Porta 465 - SSL)",
+      "status": "SUCESSO",
+      "details": "Servidor aceita login (credenciais incorretas)",
+      "timestamp": "2025-09-20T22:56:16.228193"
+    },
+    {
+      "test": "Conectividade Gmail SMTP (Porta 25 - SMTP Padrão)",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:16.480660"
+    },
+    {
+      "test": "Conexão SMTP Gmail SMTP (Porta 25 - SMTP Padrão)",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:17.108077"
+    },
+    {
+      "test": "Login SMTP Gmail SMTP (Porta 25 - SMTP Padrão)",
+      "status": "SUCESSO",
+      "details": "Servidor aceita login (credenciais incorretas)",
+      "timestamp": "2025-09-20T22:56:17.726411"
+    },
+    {
+      "test": "Conectividade Gmail SMTP (IP Direto - 587)",
+      "status": "SUCESSO",
+      "details": "Porta acessível",
+      "timestamp": "2025-09-20T22:56:18.176258"
+    },
+    {
+      "test": "Conexão SMTP Gmail SMTP (IP Direto - 587)",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:20.278912"
+    },
+    {
+      "test": "Login SMTP Gmail SMTP (IP Direto - 587)",
+      "status": "SUCESSO",
+      "details": "Servidor aceita login (credenciais incorretas)",
+      "timestamp": "2025-09-20T22:56:22.532420"
+    },
+    {
+      "test": "Servidor Outlook SMTP",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:23.103109"
+    },
+    {
+      "test": "Servidor Yahoo SMTP",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:23.912307"
+    },
+    {
+      "test": "Servidor SendGrid SMTP",
+      "status": "SUCESSO",
+      "details": "Conexão estabelecida",
+      "timestamp": "2025-09-20T22:56:25.052958"
+    }
+  ],
+  "timestamp": "2025-09-20T22:56:25.331642"
+}
