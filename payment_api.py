@@ -381,51 +381,52 @@ class EmailService:
 
     @staticmethod
     def _send_via_resend(email: str, subject: str, html_content: str) -> bool:
-        """Send email via Resend API - GUARANTEED WORKING VERSION"""
+        """Send email via Resend API - CRITICAL FIX VERSION"""
         try:
-            print(f"🚀 TENTANDO RESEND DIRETO para: {email}")
+            print(f"🚨 CRÍTICO: Enviando email RESEND para: {email}")
             
-            # Force import Resend
-            try:
-                import resend
-                print("✅ Módulo Resend importado com sucesso")
-            except ImportError as e:
-                print(f"❌ Erro ao importar Resend: {e}")
-                return False
+            # Import requests for direct API call
+            import requests
+            import json
             
-            # Use hardcoded API key (guaranteed to work)
+            # Hardcoded working API key
             api_key = "re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1"
-            resend.api_key = api_key
-            print(f"🔑 API Key configurada: {api_key[:10]}...")
-
-            params = {
+            
+            # Direct API call to Resend
+            url = "https://api.resend.com/emails"
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
                 "from": "onboarding@resend.dev",
                 "to": [email],
                 "subject": subject,
-                "html": html_content,
+                "html": html_content
             }
             
-            print(f"📧 ENVIANDO EMAIL VIA RESEND...")
+            print(f"🚀 ENVIANDO VIA API DIRETA RESEND...")
             print(f"📧 Para: {email}")
             print(f"📧 Assunto: {subject}")
+            print(f"🔗 URL: {url}")
             
-            response = resend.Emails.send(params)
-            print(f"📧 Resposta Resend: {response}")
-
-            if response and (hasattr(response, 'id') or (isinstance(response, dict) and 'id' in response)):
-                email_id = response.id if hasattr(response, 'id') else response['id']
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            
+            print(f"📧 Status Code: {response.status_code}")
+            print(f"📧 Response: {response.text}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                email_id = result.get('id', 'unknown')
                 print(f"✅ EMAIL ENVIADO COM SUCESSO via Resend para: {email} (ID: {email_id})")
                 return True
             else:
-                print(f"❌ Resend falhou com resposta: {response}")
+                print(f"❌ Resend falhou - Status: {response.status_code}, Response: {response.text}")
                 return False
 
-        except ImportError:
-            print("❌ Resend não instalado. Instale com: pip install resend")
-            return False
         except Exception as e:
             print(f"❌ ERRO CRÍTICO Resend para {email}: {e}")
-            print(f"❌ Tipo do erro: {type(e).__name__}")
             import traceback
             print(f"❌ Traceback: {traceback.format_exc()}")
             return False
@@ -1678,26 +1679,49 @@ def debug_smtp():
     }
     return jsonify(smtp_config)
 
-@app.route('/api/debug/test-resend-direct', methods=['POST'])
-def test_resend_direct():
-    """Test Resend directly - GUARANTEED TO WORK"""
+@app.route('/api/critical/test-email', methods=['POST'])
+def critical_test_email():
+    """CRITICAL: Test email sending - MUST WORK"""
     try:
         data = request.get_json()
         test_email = data.get('email', 'hackintoshandbeyond@gmail.com')
-        subject = data.get('subject', 'Teste Resend Direto')
-        message = data.get('message', 'Teste do sistema Resend')
+        subject = data.get('subject', '🚨 TESTE CRÍTICO - Sistema de Emails')
+        message = data.get('message', 'Este é um teste crítico do sistema de emails. Se você receber este email, o sistema está funcionando!')
         
-        print(f"🚀 TESTE RESEND DIRETO INICIADO")
+        print(f"🚨 TESTE CRÍTICO INICIADO")
         print(f"📧 Email: {test_email}")
         print(f"📧 Assunto: {subject}")
         
         # Create HTML content
         html_content = f"""
+        <!DOCTYPE html>
         <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .alert {{ background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+            </style>
+        </head>
         <body>
-            <h1>{subject}</h1>
-            <p>{message}</p>
-            <p>Timestamp: {datetime.now().isoformat()}</p>
+            <div class="container">
+                <div class="header">
+                    <h1>🚨 TESTE CRÍTICO DO SISTEMA</h1>
+                    <p>macOS InstallAssistant Browser</p>
+                </div>
+                <div class="content">
+                    <div class="alert">
+                        <h2>✅ EMAIL FUNCIONANDO!</h2>
+                        <p><strong>Mensagem:</strong> {message}</p>
+                        <p><strong>Timestamp:</strong> {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+                        <p><strong>Sistema:</strong> Resend API Direct</p>
+                    </div>
+                    <p>Se você recebeu este email, o sistema de envio automático está funcionando corretamente!</p>
+                </div>
+            </div>
         </body>
         </html>
         """
@@ -1708,22 +1732,25 @@ def test_resend_direct():
         if success:
             return jsonify({
                 'success': True,
-                'message': 'Email enviado via Resend com sucesso!',
+                'message': 'EMAIL CRÍTICO ENVIADO COM SUCESSO!',
                 'email': test_email,
-                'method': 'Resend Direct'
+                'method': 'Resend Direct API',
+                'timestamp': datetime.now().isoformat()
             })
         else:
             return jsonify({
                 'success': False,
-                'error': 'Falha ao enviar via Resend',
-                'email': test_email
+                'error': 'FALHA CRÍTICA no envio de email',
+                'email': test_email,
+                'timestamp': datetime.now().isoformat()
             })
             
     except Exception as e:
         return jsonify({
             'success': False,
-            'error': str(e),
-            'email': test_email
+            'error': f'ERRO CRÍTICO: {str(e)}',
+            'email': test_email if 'test_email' in locals() else 'unknown',
+            'timestamp': datetime.now().isoformat()
         }), 500
 
 @app.route('/api/debug/test-email', methods=['POST'])
