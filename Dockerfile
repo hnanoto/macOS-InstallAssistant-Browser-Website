@@ -1,3 +1,25 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PORT=5001
+
+WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    build-essential curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+COPY . /app/
+
+EXPOSE 5001
+
+CMD ["python3", "payment_api.py"]
+
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
