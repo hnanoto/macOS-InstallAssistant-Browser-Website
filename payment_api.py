@@ -2144,23 +2144,44 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
             "Content-Type": "application/json"
         }
         
-        # Send to admin (since Resend test key only allows sending to verified email)
-        # Admin will forward to customer
+        # CORREÇÃO CRÍTICA: Resend test key só envia para hackintoshandbeyond@gmail.com
+        # Enviamos para admin com instruções claras de encaminhamento
         payload = {
             "from": "onboarding@resend.dev",
             "to": ["hackintoshandbeyond@gmail.com"],
-            "subject": f"🤖 AUTOMATIZADO - Enviar para {customer_name} ({customer_email}) - Serial: {serial}",
+            "subject": f"🚨 URGENTE - Enviar Serial para {customer_name} ({customer_email})",
             "html": f"""
-            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h2>🤖 EMAIL AUTOMATIZADO PARA CLIENTE</h2>
-                <p><strong>ENVIE IMEDIATAMENTE PARA:</strong> {customer_email}</p>
-                <p><strong>Cliente:</strong> {customer_name}</p>
-                <p><strong>Serial:</strong> {serial}</p>
-                <p><strong>Assunto:</strong> 🎉 Sua Licença macOS InstallAssistant Browser - Serial: {serial}</p>
-                <hr>
-                <p><strong>COPIE TODO O CONTEÚDO ABAIXO E ENVIE PARA O CLIENTE:</strong></p>
+            <div style="font-family: Arial, sans-serif; padding: 20px; background: #fff3cd; border: 3px solid #ffc107; border-radius: 10px; margin-bottom: 20px;">
+                <h1 style="color: #856404; text-align: center;">🚨 AÇÃO URGENTE NECESSÁRIA!</h1>
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <h2>📧 CLIENTE AGUARDANDO EMAIL:</h2>
+                    <p><strong>Nome:</strong> {customer_name}</p>
+                    <p><strong>Email:</strong> <span style="font-size: 18px; color: #dc3545; font-weight: bold;">{customer_email}</span></p>
+                    <p><strong>Serial:</strong> <span style="font-size: 20px; color: #28a745; font-family: monospace; font-weight: bold;">{serial}</span></p>
+                    <p><strong>Transação:</strong> {transaction_id}</p>
+                    <p><strong>Valor:</strong> {amount_display}</p>
+                </div>
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3 style="color: #721c24;">⚡ INSTRUÇÕES IMEDIATAS:</h3>
+                    <ol style="color: #721c24;">
+                        <li><strong>Copie o email abaixo</strong></li>
+                        <li><strong>Envie para:</strong> {customer_email}</li>
+                        <li><strong>Assunto:</strong> 🎉 Sua Licença macOS InstallAssistant Browser - Serial: {serial}</li>
+                        <li><strong>Envie IMEDIATAMENTE</strong> - Cliente está aguardando!</li>
+                    </ol>
+                </div>
+                <hr style="border: 2px solid #ffc107; margin: 20px 0;">
+                <div style="background: #e7f3ff; border: 2px solid #0066cc; padding: 20px; border-radius: 8px;">
+                    <h2 style="color: #0066cc;">📋 EMAIL PARA COPIAR E ENVIAR:</h2>
+                    <div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
+                        {html_content}
+                    </div>
+                </div>
+                <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
+                    <h3 style="color: #0c5460;">🔧 SOLUÇÃO PERMANENTE:</h3>
+                    <p style="color: #0c5460;">Para resolver definitivamente, configure um domínio verificado no Resend ou use uma API key de produção.</p>
+                </div>
             </div>
-            {html_content}
             """
         }
         
@@ -2169,13 +2190,16 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
         if response.status_code == 200:
             result = response.json()
             email_id = result.get('id', 'unknown')
-            print(f"✅ AUTOMATIZADO: Email enviado para admin encaminhar ao cliente")
+            print(f"🚨 CORREÇÃO APLICADA: Email enviado para admin encaminhar ao cliente")
             print(f"📧 Email ID: {email_id}")
+            print(f"📧 Cliente: {customer_email} - Serial: {serial}")
+            print(f"⚠️ LIMITAÇÃO: Resend test key só envia para hackintoshandbeyond@gmail.com")
+            print(f"✅ SOLUÇÃO: Admin receberá email com instruções de encaminhamento")
             
             # Log the automated email
             log_data = {
                 'timestamp': datetime.now().isoformat(),
-                'type': 'automated_customer_email',
+                'type': 'automated_customer_email_via_admin',
                 'customer_email': customer_email,
                 'customer_name': customer_name,
                 'serial': serial,
@@ -2183,8 +2207,9 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
                 'amount': amount,
                 'currency': currency,
                 'email_id': email_id,
-                'status': 'sent_to_admin_for_forwarding',
-                'method': 'automated_system'
+                'status': 'sent_to_admin_for_manual_forwarding',
+                'method': 'resend_test_key_limitation_workaround',
+                'limitation': 'resend_test_key_only_allows_hackintoshandbeyond@gmail.com'
             }
             
             with open('automated_emails.json', 'a') as f:
@@ -2192,7 +2217,8 @@ def send_automated_customer_email(customer_email, customer_name, serial, transac
             
             return True
         else:
-            print(f"❌ AUTOMATIZADO: Falha no envio - {response.status_code}")
+            print(f"❌ AUTOMATIZADO: Falha no envio para admin - {response.status_code}")
+            print(f"❌ Response: {response.text}")
             return False
             
     except Exception as e:
