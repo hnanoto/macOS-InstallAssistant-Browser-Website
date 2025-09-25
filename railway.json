@@ -10,7 +10,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "python website/api/payment_api.py",
+    "startCommand": "python -m website.api.payment_api",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120
   }
