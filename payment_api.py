@@ -80,6 +80,16 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Create upload directory
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Debug helper: log routes on startup in production to validar deploy
+def _log_routes_on_start():
+    try:
+        if os.getenv('LOG_ROUTES_ON_START', 'true').lower() == 'true':
+            print('🗺️ Routes at startup:')
+            for rule in sorted(app.url_map.iter_rules(), key=lambda r: str(r)):
+                print(f" - {rule} → {sorted((rule.methods or set()) - {'OPTIONS'})}")
+    except Exception as _e:
+        pass
+
 # Endpoint de diagnóstico para listar rotas ativas (ajuda no deploy)
 @app.route('/api/routes', methods=['GET'])
 def list_routes():
@@ -4408,18 +4418,26 @@ if __name__ == '__main__':
             print(f"⚠️ Erro ao iniciar confirmação automática: {e}")
     
     # Get port from environment (Railway sets this automatically)
-    port = int(os.getenv('PORT', 5001))
+    port = int(os.getenv('PORT', 8080))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     
     print(f"🚀 Server starting on port: {port}")
     print(f"🔧 Debug mode: {debug}")
+    _log_routes_on_start()
     
-    # Run the app
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=debug
-    )
+    # Prefer WSGI server when available
+    use_gunicorn = os.getenv('USE_GUNICORN', 'false').lower() == 'true'
+    if use_gunicorn:
+        try:
+            from gunicorn.app.wsgiapp import WSGIApplication
+            import sys
+            sys.argv = ['gunicorn', '-w', '2', '-b', f'0.0.0.0:{port}', 'payment_api:app']
+            WSGIApplication().run()
+        except Exception as e:
+            print(f"⚠️ Gunicorn indisponível ({e}), usando Flask dev server...")
+            app.run(host='0.0.0.0', port=port, debug=debug)
+    else:
+        app.run(host='0.0.0.0', port=port, debug=debug)
 # FORCE REDEPLOY - Wed Sep 24 13:49:19 -03 2025
 
 # AbacatePay Integration - Híbrida (Real + Simulação)
