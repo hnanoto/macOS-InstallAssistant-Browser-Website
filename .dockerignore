@@ -1,0 +1,22 @@
+# Diretórios e arquivos que não precisam ir para a imagem Docker
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.log
+uploads
+logs
+node_modules
+*.sqlite3
+*.db
+.DS_Store
+*.zip
+*.tar
+
+# Pastas de builds ou caches temporárias
+macOS-InstallAssistant-Browser-2
+macOS-InstallAssistant-Browser-Website
+repo_root_clone
+

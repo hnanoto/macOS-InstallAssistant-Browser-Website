@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: payment-api
+    env: docker
+    docker:
+      registry: ghcr.io
+      image: hnaonto/macos-installassistant-browser-website/payment-api
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "5000"
+      - key: LOG_ROUTES_ON_START
+        value: "true"
+      - key: APP_BASE_URL
+        value: "https://<SEU-SERVICO>.onrender.com"
+      - key: STORAGE_URL_BASE
+        value: "https://<SEU-SERVICO>.onrender.com/uploads"
+      - key: UPLOAD_FOLDER
+        value: "/app/website/uploads"
+      - key: ENABLE_AUTO_CONFIRMATION
+        value: "false"
+      - key: AUTO_CONFIRMATION_BASE_URL
+        value: "https://<SEU-SERVICO>.onrender.com"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "no-reply@seu-dominio.com"
+      - key: EMAIL_TO_DEFAULT
+        value: "hackintoshandbeyond@gmail.com"
+      - key: REPLY_TO_DEFAULT
+        value: "suporte@seu-dominio.com"
+
