@@ -1,6 +1,8 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": { "builder": "NIXPACKS" },
+  "build": {
+    "builder": "NIXPACKS"
+  },
   "deploy": {
     "runtime": "V2",
     "numReplicas": 1,
@@ -8,6 +10,23 @@
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "restartPolicyMaxRetries": 10,
+    "sleepApplication": false
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "PYTHON_VERSION": "3.11.7",
+        "RESEND_API_KEY": "re_VnpKHpWb_PRKzZtixbtAA8gjWR3agmtc1",
+        "USE_RESEND": "true",
+        "EMAIL_PROVIDER": "resend",
+        "SMTP_ENABLED": "false",
+        "USE_SENDGRID": "false",
+        "RAILWAY_ENVIRONMENT": "production",
+        "APP_BASE_URL": "https://web-production-1513a.up.railway.app",
+        "DEBUG": "false",
+        "USE_GUNICORN": "true"
+      }
+    }
   }
 }
