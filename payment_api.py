@@ -163,8 +163,8 @@ EMAIL_TO_DEFAULT = os.getenv('EMAIL_TO_DEFAULT', 'hackintoshandbeyond@gmail.com'
 REPLY_TO_DEFAULT = os.getenv('REPLY_TO_DEFAULT', 'suporte@seu-dominio.com')
 
 # App Configuration
-APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://web-production-1513a.up.railway.app')
-STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', 'https://cdn.seu-dominio.com/proofs')
+APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://payment-api-b6th.onrender.com')
+STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', 'https://payment-api-b6th.onrender.com/uploads')
 
 if IS_RAILWAY:
     # Railway configuration - use environment variables
@@ -997,7 +997,7 @@ class EmailService:
                         </div>
                         
                         <div style="text-align: center; margin-top: 30px;">
-                            <a href="https://web-production-1513a.up.railway.app/admin" 
+                            <a href="{APP_BASE_URL}/admin" 
                                style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">
                                 🛡️ Acessar Painel Admin
                             </a>
@@ -1233,7 +1233,7 @@ class EmailService:
                         <div class="urgent">
                             <h3>⚡ AÇÃO IMEDIATA NECESSÁRIA!</h3>
                             <p><strong>Acesse o painel administrativo para aprovar ou rejeitar este pagamento.</strong></p>
-                            <a href="https://web-production-1513a.up.railway.app/admin" class="button">
+                            <a href="{APP_BASE_URL}/admin" class="button">
                                 🔧 ACESSAR PAINEL ADMIN
                             </a>
                         </div>
@@ -2785,7 +2785,7 @@ def swift_confirm_payment():
                         'error': 'Pagamento PIX requer aprovação manual. Envie o comprovante para aprovação.',
                         'status': 'pending_approval',
                         'requires_proof': True,
-                        'proof_upload_url': f'https://web-production-1513a.up.railway.app/upload-proof?payment_id={payment_id}'
+                        'proof_upload_url': f'{APP_BASE_URL}/upload-proof?payment_id={payment_id}'
                     }), 400
                 except Exception as _e:
                     return jsonify({'error': 'Payment not found'}), 404
@@ -2803,7 +2803,7 @@ def swift_confirm_payment():
                     'error': 'Pagamento PIX requer aprovação manual. Envie o comprovante para aprovação.',
                     'status': 'pending_approval',
                     'requires_proof': True,
-                    'proof_upload_url': f'https://web-production-1513a.up.railway.app/upload-proof?payment_id={payment_id}'
+                    'proof_upload_url': f'{APP_BASE_URL}/upload-proof?payment_id={payment_id}'
                 }), 400
                 
         elif payment['method'] == 'paypal':
