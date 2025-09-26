@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portal de Aprovação · macOS InstallAssistant Browser</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #111827;
+      --surface: #1f2937;
+      --surface-contrast: #111827;
+      --primary: #2563eb;
+      --primary-contrast: #1e3a8a;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: rgba(148, 163, 184, 0.2);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --background: #f3f4f6;
+        --surface: #ffffff;
+        --surface-contrast: #f9fafb;
+        --primary: #2563eb;
+        --primary-contrast: #1d4ed8;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: rgba(148, 163, 184, 0.4);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, rgba(37, 99, 235, 0.2), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(147, 197, 253, 0.25), transparent 60%),
+                  var(--background);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 48px 16px 64px;
+    }
+
+    .container {
+      width: min(1200px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    header {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(17, 24, 39, 0.7));
+      backdrop-filter: blur(20px);
+      padding: 32px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 60px -30px rgba(37, 99, 235, 0.65);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: -60px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.35), transparent 45%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(32px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 12px 0 0;
+      max-width: 520px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.5);
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px -16px rgba(37, 99, 235, 0.55);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .panel {
+      backdrop-filter: blur(24px);
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(17, 24, 39, 0.65));
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 28px;
+      box-shadow: 0 18px 50px -25px rgba(15, 23, 42, 0.7);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+      background: rgba(17, 24, 39, 0.75);
+    }
+
+    thead {
+      background: rgba(37, 99, 235, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    th, td {
+      padding: 16px 18px;
+      text-align: left;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    tbody tr:hover {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-approved { background: rgba(34, 197, 94, 0.18); color: #34d399; }
+    .status-under_review { background: rgba(245, 158, 11, 0.22); color: #fbbf24; }
+    .status-rejected { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+
+    .actions {
+      display: inline-flex;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      color: #fff;
+    }
+
+    .button-primary { background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(59, 130, 246, 0.9)); }
+    .button-danger { background: linear-gradient(135deg, rgba(239, 68, 68, 0.92), rgba(248, 113, 113, 0.9)); }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px -18px rgba(37, 99, 235, 0.75);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+      font-size: 16px;
+      background: rgba(17, 24, 39, 0.6);
+    }
+
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    footer a { color: rgba(59, 130, 246, 0.8); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Portal de Aprovação</h1>
+      <p>Gerencie as compras do macOS InstallAssistant Browser. Aprove comprovantes enviados, gere seriais e acompanhe o histórico de pagamentos em tempo real.</p>
+    </header>
+
+    <div id="dashboard" class="stats" hidden>
+      <div class="stat-card">
+        <span class="stat-label">Pendentes</span>
+        <span class="stat-value" id="stat-pending">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Aprovados</span>
+        <span class="stat-value" id="stat-approved">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Rejeitados</span>
+        <span class="stat-value" id="stat-rejected">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Última Atualização</span>
+        <span class="stat-value" id="stat-updated">--</span>
+      </div>
+    </div>
+
+    <main class="panel">
+      <div class="table-wrapper" id="list">
+        <div class="empty-state">Carregando pagamentos...</div>
+      </div>
+    </main>
+
+    <footer>
+      macOS InstallAssistant Browser · Portal seguro · <a href="mailto:hackintoshandbeyond@gmail.com">Suporte</a>
+    </footer>
+  </div>
+
+  <script>
+    const BASE_URL = window.location.origin;
+
+    function currency(brlCents) {
+      return (brlCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function badge(status) {
+      const map = {
+        approved: 'status-approved',
+        under_review: 'status-under_review',
+        rejected: 'status-rejected',
+      };
+      return `<span class="badge ${map[status] || ''}">${status.replace('_', ' ')}</span>`;
+    }
+
+    async function load() {
+      const container = document.getElementById('list');
+      container.innerHTML = '<div class="empty-state">Atualizando pagamentos...</div>';
+
+      try {
+        const res = await fetch('/api/admin/payments');
+        if (!res.ok) throw new Error('Erro ao buscar lista');
+        const data = await res.json();
+        const rows = (data.payments || [])
+          .map(p => `
+            <tr>
+              <td>
+                <strong>${p.id}</strong>
+                <div style="font-size:12px;color:var(--muted);">${new Date(p.created_at || Date.now()).toLocaleString('pt-BR')}</div>
+              </td>
+              <td>
+                <div style="font-weight:600;">${p.name || '—'}</div>
+                <div style="font-size:13px;color:var(--muted);">${p.email || '—'}</div>
+              </td>
+              <td>${currency(p.amount || 0)}</td>
+              <td>${badge(p.status || 'under_review')}</td>
+              <td>${p.proof_file ? `<a class="button" style="padding:8px 12px;font-size:12px;background:rgba(59,130,246,0.18);color:rgba(59,130,246,0.9);" href="/uploads/${p.proof_file}" target="_blank">Ver comprovante</a>` : '—'}</td>
+              <td>
+                <div class="actions">
+                  <a class="button button-primary" href="#" onclick='approve("${p.id}");return false;'>Aprovar</a>
+                  <a class="button button-danger" href="#" onclick='rejectp("${p.id}");return false;'>Rejeitar</a>
+                </div>
+              </td>
+            </tr>
+          `)
+          .join('');
+
+        document.getElementById('dashboard').hidden = false;
+        document.getElementById('stat-pending').textContent = data.payments.filter(p => p.status === 'under_review').length;
+        document.getElementById('stat-approved').textContent = data.payments.filter(p => p.status === 'approved').length;
+        document.getElementById('stat-rejected').textContent = data.payments.filter(p => p.status === 'rejected').length;
+        document.getElementById('stat-updated').textContent = new Date().toLocaleTimeString('pt-BR');
+
+        if (!rows) {
+          container.innerHTML = '<div class="empty-state">Nenhum pagamento encontrado até o momento.</div>';
+        } else {
+          container.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Identificador</th>
+                  <th>Cliente</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Comprovante</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+        }
+      } catch (error) {
+        container.innerHTML = `<div class="empty-state">Erro ao carregar pagamentos. ${error.message}</div>`;
+      }
+    }
+
+    async function approve(id) {
+      try {
+        const res = await fetch(`/api/admin/payments/${id}/approve`, { method: 'POST' });
+        if (!res.ok) throw new Error('Falha ao aprovar');
+        load();
+      } catch (error) {
+        alert('Erro ao aprovar: ' + error.message);
+      }
+    }
+
+    async function rejectp(id) {
+      const reason = prompt('Motivo da rejeição (opcional):') || '';
+      try {
+        const res = await fetch(`/api/admin/payments/${id}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        if (!res.ok) throw new Error('Falha ao rejeitar');
+        load();
+      } catch (error) {
+        alert('Erro ao rejeitar: ' + error.message);
+      }
+    }
+
+    load();
+    setInterval(load, 15000);
+  </script>
+</body>
+</html>
