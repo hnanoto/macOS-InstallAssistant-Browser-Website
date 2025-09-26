@@ -273,11 +273,11 @@
         
         async function loadPendingPayments() {
             try {
-                const response = await fetch('/api/admin/pending-payments');
+                const response = await fetch('/api/admin/payments');
                 const result = await response.json();
                 
                 if (result.success) {
-                    pendingPayments = result.pending_payments;
+                    pendingPayments = result.payments;
                     updateStats(result.count);
                     renderPendingPayments();
                 } else {
@@ -353,15 +353,11 @@
             }
             
             try {
-                const response = await fetch('/api/admin/approve-payment', {
+                const response = await fetch(`/api/admin/payments/${paymentId}/approve`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        payment_id: paymentId,
-                        action: 'approve'
-                    })
+                    }
                 });
                 
                 const result = await response.json();
@@ -383,15 +379,11 @@
             }
             
             try {
-                const response = await fetch('/api/admin/approve-payment', {
+                const response = await fetch(`/api/admin/payments/${paymentId}/reject`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        payment_id: paymentId,
-                        action: 'reject'
-                    })
+                    }
                 });
                 
                 const result = await response.json();
@@ -408,7 +400,13 @@
         }
         
         function viewProof(paymentId) {
-            window.open(`/api/admin/view-proof/${paymentId}`, '_blank');
+            // Buscar o pagamento para obter o nome do arquivo
+            const payment = pendingPayments.find(p => p.payment_id === paymentId);
+            if (payment && payment.proof_filename) {
+                window.open(`/uploads/${payment.proof_filename}`, '_blank');
+            } else {
+                alert('Comprovante não encontrado');
+            }
         }
         
         function showError(message) {
