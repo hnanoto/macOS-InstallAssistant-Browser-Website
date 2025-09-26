@@ -1,14 +1,6 @@
-Flask==3.0.3
-flask-cors==4.0.1
-requests==2.31.0
-python-dotenv==1.0.1
-stripe==5.6.0
-sendgrid==6.11.0
-resend==0.6.0
-gunicorn==22.0.0
 # Payment API Dependencies
-Flask==2.3.3
-Flask-CORS==4.0.0
+Flask==3.0.3
+Flask-CORS==4.0.1
 stripe==6.7.0
 requests==2.31.0
 Werkzeug==2.3.7
@@ -22,25 +14,21 @@ charset-normalizer==3.3.0
 idna==3.4
 urllib3==2.0.7
 
-# Optional: For production deployment
-gunicorn==21.2.0
+# Production deployment
+gunicorn==22.0.0
 
-# Optional: For database support (if needed later)
-# SQLAlchemy==2.0.23
-# Flask-SQLAlchemy==3.1.1
+# Environment variable management
+python-dotenv==1.0.1
 
-# Optional: For environment variable management
-python-dotenv==1.0.0
-
-# Optional: For logging
+# Logging
 coloredlogs==15.0.1
 
-# Optional: For email templates
+# Email templates
 premailer==3.10.0
 
 # Email providers
-sendgrid==6.10.0
+sendgrid==6.11.0
 resend==0.6.0
 
-# Optional: For better error handling
+# Error handling
 sentry-sdk[flask]==1.38.0
