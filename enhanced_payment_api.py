@@ -697,6 +697,231 @@ def test_upload_page():
     """Serve upload test page"""
     return send_from_directory('.', 'test_upload_page.html')
 
+# ===== ROTAS ADMINISTRATIVAS =====
+
+@app.route('/api/admin/pending-payments', methods=['GET'])
+def admin_pending_payments():
+    """Get pending payments for admin review"""
+    try:
+        pending_payments = []
+        for payment_id, payment in payments_db.items():
+            if payment.get('status') == 'pending':
+                pending_payments.append({
+                    'id': payment_id,
+                    'email': payment.get('email', ''),
+                    'amount': payment.get('amount', 0),
+                    'method': payment.get('method', ''),
+                    'timestamp': payment.get('timestamp', ''),
+                    'proof_filename': payment.get('proof_filename', '')
+                })
+        
+        return jsonify({
+            'success': True,
+            'pending_payments': pending_payments,
+            'count': len(pending_payments)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/approve-payment', methods=['POST'])
+def admin_approve_payment():
+    """Approve a payment manually"""
+    try:
+        data = request.get_json()
+        payment_id = data.get('payment_id')
+        
+        if not payment_id or payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        # Update payment status
+        payments_db[payment_id]['status'] = 'approved'
+        payments_db[payment_id]['approved_at'] = datetime.now().isoformat()
+        save_payments()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment approved successfully',
+            'payment_id': payment_id
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/view-proof/<payment_id>')
+def admin_view_proof(payment_id):
+    """View payment proof file"""
+    try:
+        if payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        payment = payments_db[payment_id]
+        proof_filename = payment.get('proof_filename')
+        
+        if not proof_filename:
+            return jsonify({'error': 'No proof file found'}), 404
+        
+        return send_from_directory('uploads', proof_filename)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/payments', methods=['GET'])
+def admin_payments():
+    """Get all payments for admin"""
+    try:
+        all_payments = []
+        for payment_id, payment in payments_db.items():
+            all_payments.append({
+                'id': payment_id,
+                'email': payment.get('email', ''),
+                'amount': payment.get('amount', 0),
+                'method': payment.get('method', ''),
+                'status': payment.get('status', ''),
+                'timestamp': payment.get('timestamp', ''),
+                'proof_filename': payment.get('proof_filename', '')
+            })
+        
+        return jsonify({
+            'success': True,
+            'payments': all_payments,
+            'count': len(all_payments)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/payments/<payment_id>/approve', methods=['POST'])
+def admin_approve_payment_by_id(payment_id):
+    """Approve payment by ID"""
+    try:
+        if payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        payments_db[payment_id]['status'] = 'approved'
+        payments_db[payment_id]['approved_at'] = datetime.now().isoformat()
+        save_payments()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment approved successfully'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/payments/<payment_id>/reject', methods=['POST'])
+def admin_reject_payment_by_id(payment_id):
+    """Reject payment by ID"""
+    try:
+        if payment_id not in payments_db:
+            return jsonify({'error': 'Payment not found'}), 404
+        
+        payments_db[payment_id]['status'] = 'rejected'
+        payments_db[payment_id]['rejected_at'] = datetime.now().isoformat()
+        save_payments()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment rejected successfully'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/portal')
+def admin_portal():
+    """Admin portal page"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Portal</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .payment { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+            .pending { background-color: #fff3cd; }
+            .approved { background-color: #d4edda; }
+            .rejected { background-color: #f8d7da; }
+            button { margin: 5px; padding: 5px 10px; }
+        </style>
+    </head>
+    <body>
+        <h1>Admin Portal - Payment Management</h1>
+        <div id="payments"></div>
+        
+        <script>
+            async function loadPayments() {
+                try {
+                    const response = await fetch('/api/admin/payments');
+                    const data = await response.json();
+                    
+                    const container = document.getElementById('payments');
+                    container.innerHTML = '';
+                    
+                    data.payments.forEach(payment => {
+                        const div = document.createElement('div');
+                        div.className = `payment ${payment.status}`;
+                        div.innerHTML = `
+                            <h3>Payment ID: ${payment.id}</h3>
+                            <p>Email: ${payment.email}</p>
+                            <p>Amount: $${payment.amount}</p>
+                            <p>Method: ${payment.method}</p>
+                            <p>Status: ${payment.status}</p>
+                            <p>Date: ${payment.timestamp}</p>
+                            ${payment.proof_filename ? `<p><a href="/api/admin/view-proof/${payment.id}" target="_blank">View Proof</a></p>` : ''}
+                            ${payment.status === 'pending' ? `
+                                <button onclick="approvePayment('${payment.id}')">Approve</button>
+                                <button onclick="rejectPayment('${payment.id}')">Reject</button>
+                            ` : ''}
+                        `;
+                        container.appendChild(div);
+                    });
+                } catch (error) {
+                    console.error('Error loading payments:', error);
+                }
+            }
+            
+            async function approvePayment(paymentId) {
+                try {
+                    const response = await fetch(`/api/admin/payments/${paymentId}/approve`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('Payment approved successfully');
+                        loadPayments();
+                    } else {
+                        alert('Error approving payment: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Error approving payment: ' + error.message);
+                }
+            }
+            
+            async function rejectPayment(paymentId) {
+                try {
+                    const response = await fetch(`/api/admin/payments/${paymentId}/reject`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('Payment rejected successfully');
+                        loadPayments();
+                    } else {
+                        alert('Error rejecting payment: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Error rejecting payment: ' + error.message);
+                }
+            }
+            
+            // Load payments on page load
+            loadPayments();
+            
+            // Refresh every 30 seconds
+            setInterval(loadPayments, 30000);
+        </script>
+    </body>
+    </html>
+    """
+
 # Health check endpoint
 @app.route('/api/health', methods=['GET'])
 def health_check():
