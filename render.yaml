@@ -9,7 +9,7 @@ services:
     autoDeploy: true
     envVars:
       - key: PORT
-        value: "5000"
+        value: "8080"
       - key: LOG_ROUTES_ON_START
         value: "true"
       - key: APP_BASE_URL
@@ -23,11 +23,19 @@ services:
       - key: AUTO_CONFIRMATION_BASE_URL
         value: "https://<SEU-SERVICO>.onrender.com"
       - key: RESEND_API_KEY
-        sync: false
+        value: "re_123456789_abcdefghijklmnopqrstuvwxyz"
       - key: EMAIL_FROM
         value: "no-reply@seu-dominio.com"
       - key: EMAIL_TO_DEFAULT
         value: "hackintoshandbeyond@gmail.com"
       - key: REPLY_TO_DEFAULT
         value: "suporte@seu-dominio.com"
+      - key: USE_RESEND
+        value: "true"
+      - key: USE_SENDGRID
+        value: "false"
+      - key: DEBUG
+        value: "true"
+      - key: USE_GUNICORN
+        value: "true"
 
