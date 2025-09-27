@@ -1,0 +1,40 @@
+# =============================================================================
+# CONFIGURAÇÃO DE PRIVACIDADE - MANTER APENAS DMG PÚBLICO
+# =============================================================================
+# Este .gitignore torna todos os arquivos privados, exceto o arquivo DMG
+# que deve permanecer público para download via GitHub Pages
+
+# Ignorar TODOS os arquivos por padrão
+*
+
+# Exceções - Arquivos que DEVEM ser públicos
+!.gitignore
+!.nojekyll
+!_config.yml
+
+# Pasta downloads - APENAS o DMG deve ser público
+!downloads/
+!downloads/index.html
+!downloads/README.md
+!downloads/*.dmg
+
+# Arquivos essenciais do GitHub
+!.github/
+!.github/**
+
+# README principal (pode ser público se desejar)
+!README.md
+
+# =============================================================================
+# ARQUIVOS PRIVADOS (serão ignorados pelo GitHub Pages)
+# =============================================================================
+# Todos os outros arquivos ficam privados:
+# - Códigos Python (.py)
+# - Configurações (.env, .json)
+# - Logs e uploads
+# - Documentação sensível
+# - Arquivos de teste
+# - Credenciais e configurações
+
+# Nota: O GitHub Pages só servirá os arquivos que NÃO estão no .gitignore
+# Portanto, apenas o DMG e arquivos relacionados estarão acessíveis publicamente

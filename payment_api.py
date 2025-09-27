@@ -109,8 +109,7 @@ PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 
-# Email configuration - Auto-detect environment
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
+# Email configuration
 
 # Email providers configuration
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
@@ -153,9 +152,8 @@ try:
 except Exception as e:
     print(f"❌ ERRO NO TESTE RESEND: {e}")
 
-# Force Resend on Railway (since railway.json is not being applied)
-if IS_RAILWAY:
-    print("🚀 Railway detectado - Resend já forçado globalmente")
+# Force Resend globally
+print("🚀 Resend forçado globalmente")
 
 # Email Configuration (Updated)
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'no-reply@seu-dominio.com')
@@ -166,20 +164,12 @@ REPLY_TO_DEFAULT = os.getenv('REPLY_TO_DEFAULT', 'suporte@seu-dominio.com')
 APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://payment-api-b6th.onrender.com')
 STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', 'https://payment-api-b6th.onrender.com/uploads')
 
-if IS_RAILWAY:
-    # Railway configuration - use environment variables
-    SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-    SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
-    SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'hackintoshandbeyond@gmail.com')
-    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # Must be set in Railway environment
-    FROM_EMAIL = os.getenv('FROM_EMAIL', 'hackintoshandbeyond@gmail.com')
-else:
-    # Local configuration
-    SMTP_SERVER = 'smtp.gmail.com'
-    SMTP_PORT = 587
-    SMTP_USERNAME = 'hackintoshandbeyond@gmail.com'
-    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # Use environment variable
-    FROM_EMAIL = EMAIL_FROM
+# SMTP configuration
+SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'hackintoshandbeyond@gmail.com')
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
+FROM_EMAIL = os.getenv('FROM_EMAIL', EMAIL_FROM)
 
 # Email configuration validation
 EMAIL_CONFIGURED = bool(
@@ -1712,7 +1702,7 @@ def debug_smtp():
         'use_resend': USE_RESEND,
         'resend_available': RESEND_AVAILABLE,
         'sendgrid_available': SENDGRID_AVAILABLE,
-        'is_railway': IS_RAILWAY,
+
         'email_configured': EMAIL_CONFIGURED,
         'recommended_provider': 'Resend (3000 emails/month FREE)' if USE_RESEND else 'SendGrid (100 emails/day FREE)' if USE_SENDGRID else 'None configured'
     }

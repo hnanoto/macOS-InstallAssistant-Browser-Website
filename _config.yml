@@ -1,6 +1,6 @@
-# GitHub Pages Configuration
+# GitHub Pages Configuration - APENAS DMG PÚBLICO
 title: "macOS InstallAssistant Browser"
-description: "A ferramenta definitiva para download e instalação de versões do macOS"
+description: "Download do aplicativo macOS InstallAssistant Browser"
 author: "Henrique"
 email: "hackintoshandbeyond@gmail.com"
 url: "https://hnanoto.github.io"
@@ -16,6 +16,35 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
+
+# Configuração de privacidade - apenas downloads públicos
+include:
+  - downloads/
+  - downloads/index.html
+  - downloads/README.md
+  - downloads/*.dmg
+
+# Excluir todos os outros arquivos do site público
+exclude:
+  - "*.py"
+  - "*.json"
+  - "*.log"
+  - "*.txt"
+  - "*.pdf"
+  - uploads/
+  - logs/
+  - __pycache__/
+  - tests/
+  - test_*/
+  - "*.env*"
+  - Dockerfile
+  - Procfile
+  - requirements*.txt
+  - runtime.txt
+  - render.yaml
+  - app.json
+  - "*.md"
+  - "!downloads/README.md"
 
 # SEO
 seo:
