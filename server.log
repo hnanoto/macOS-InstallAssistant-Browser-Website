@@ -106,7 +106,6 @@ INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:46:52] "GET /api/admin/pending-payme
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:46:52] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:47:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 14:47:22] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/configure_abacatepay.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
@@ -589,7 +588,6 @@ WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 494-103-128
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:14] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:23] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/swift_abacatepay_bridge.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
@@ -618,7 +616,6 @@ INFO:auto_confirmation:🚀 Monitoramento automático iniciado
 WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 494-103-128
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:37] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/swift_abacatepay_bridge.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
@@ -647,7 +644,6 @@ INFO:auto_confirmation:🚀 Monitoramento automático iniciado
 WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 494-103-128
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:44] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/swift_abacatepay_bridge.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
@@ -677,7 +673,6 @@ WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 494-103-128
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:50] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:58:53] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/swift_abacatepay_bridge.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
@@ -739,7 +734,6 @@ INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:59:23] "GET /api/admin/pending-payme
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:59:43] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 15:59:53] "GET /api/admin/pending-payments HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [24/Sep/2025 16:00:13] "GET /api/admin/pending-payments HTTP/1.1" 200 -
-INFO:werkzeug: * Detected change in '/Users/henrique/Desktop/Backup-Matrix/Layout-NOVO-Processo/Andamento-Projeto -Cursor/website/api/swift_abacatepay_bridge.py', reloading
 ✅ Sistema de notificações carregado com sucesso
 ✅ Resend carregado com sucesso
 ✅ SendGrid carregado com sucesso
