@@ -960,8 +960,8 @@ if __name__ == '__main__':
     print("   ✅ Receipt System")
     
     # Get port from environment
-    port = int(os.getenv('PORT', 5001))
-    debug = os.getenv('DEBUG', 'False').lower() == 'true'
+    port = int(os.getenv('PORT', 5002))
+    debug = os.getenv('DEBUG', 'True').lower() == 'true'
     
     print(f"🌐 Server starting on port: {port}")
     print(f"🔧 Debug mode: {debug}")
