@@ -1,1 +1,1 @@
-web: gunicorn -w 2 -b 0.0.0.0:$PORT enhanced_payment_api:app
+web: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
