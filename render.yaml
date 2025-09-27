@@ -1,26 +1,30 @@
 services:
   - type: web
     name: payment-api
-    env: docker
-    docker:
-      registry: ghcr.io
-      image: hnaonto/macos-installassistant-browser-website/payment-api
+    env: python
     plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout ${GUNICORN_TIMEOUT:-120}
     autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
       - key: PORT
         value: "8080"
       - key: LOG_ROUTES_ON_START
         value: "true"
+      - key: DEBUG
+        value: "false"
       - key: APP_BASE_URL
         value: "https://<SEU-SERVICO>.onrender.com"
       - key: STORAGE_URL_BASE
         value: "https://<SEU-SERVICO>.onrender.com/uploads"
       - key: UPLOAD_FOLDER
         value: "/app/website/uploads"
-      - key: ENABLE_AUTO_CONFIRMATION
-        value: "false"
-      - key: AUTO_CONFIRMATION_BASE_URL
+      - key: AUTO_CONFIRMATION_ENABLED
+        value: "true"
+      - key: AUTO_CONFIRMATION_API_BASE_URL
         value: "https://<SEU-SERVICO>.onrender.com"
       - key: RESEND_API_KEY
         value: "re_123456789_abcdefghijklmnopqrstuvwxyz"
@@ -34,8 +38,3 @@ services:
         value: "true"
       - key: USE_SENDGRID
         value: "false"
-      - key: DEBUG
-        value: "true"
-      - key: USE_GUNICORN
-        value: "true"
-

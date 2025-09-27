@@ -57,13 +57,41 @@ except ImportError:
 
 # Import auto confirmation system
 try:
-    from auto_confirmation_system import auto_confirmation_system, start_auto_confirmation, get_auto_confirmation_stats
+    from auto_confirmation_system import (
+        auto_confirmation_system,
+        start_auto_confirmation,
+        get_auto_confirmation_stats,
+    )
     AUTO_CONFIRMATION_ENABLED = True
     print("✅ Sistema de confirmação automática carregado com sucesso")
 except ImportError:
     AUTO_CONFIRMATION_ENABLED = False
     auto_confirmation_system = None
     print("⚠️ Sistema de confirmação automática não disponível")
+
+
+# Deployment environment helpers
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None
+IS_RENDER = bool(os.getenv('RENDER_SERVICE_ID') or os.getenv('RENDER_EXTERNAL_URL'))
+INTERNAL_PORT = int(os.getenv('PORT', '8080'))
+
+if AUTO_CONFIRMATION_ENABLED:
+    try:
+        # Permitir sobreposição por variável de ambiente explícita
+        auto_confirmation_system.api_base_url = os.getenv(
+            'AUTO_CONFIRMATION_API_BASE_URL',
+            f"http://127.0.0.1:{INTERNAL_PORT}"
+        )
+        print(f"🤖 Auto confirmation base URL configurada: {auto_confirmation_system.api_base_url}")
+    except Exception as auto_cfg_error:
+        print(f"⚠️ Não foi possível configurar auto confirmation base URL: {auto_cfg_error}")
+
+auto_confirmation_flag = os.getenv('AUTO_CONFIRMATION_ENABLED')
+if auto_confirmation_flag is not None:
+    desired_state = auto_confirmation_flag.lower() in {'true', '1', 'yes', 'y', 'on'}
+    if AUTO_CONFIRMATION_ENABLED and not desired_state:
+        print('⚠️ Auto confirmation desativado via variável de ambiente')
+    AUTO_CONFIRMATION_ENABLED = AUTO_CONFIRMATION_ENABLED and desired_state
 
 # Configuration
 app = Flask(__name__)
@@ -108,8 +136,6 @@ STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
-
-# Email configuration
 
 # Email providers configuration
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
@@ -161,8 +187,20 @@ EMAIL_TO_DEFAULT = os.getenv('EMAIL_TO_DEFAULT', 'hackintoshandbeyond@gmail.com'
 REPLY_TO_DEFAULT = os.getenv('REPLY_TO_DEFAULT', 'suporte@seu-dominio.com')
 
 # App Configuration
-APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://payment-api-b6th.onrender.com')
-STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', 'https://payment-api-b6th.onrender.com/uploads')
+default_app_base = (
+    os.getenv('APP_BASE_URL_DEFAULT')
+    or os.getenv('RENDER_EXTERNAL_URL')
+    or ('https://payment-api-b6th.onrender.com' if IS_RENDER else (
+        'https://web-production-1513a.up.railway.app' if IS_RAILWAY
+        else f"http://127.0.0.1:{INTERNAL_PORT}"
+    ))
+)
+APP_BASE_URL = os.getenv('APP_BASE_URL', default_app_base)
+default_storage_base = (
+    os.getenv('STORAGE_URL_BASE_DEFAULT')
+    or ('https://payment-api-b6th.onrender.com/uploads' if IS_RENDER else 'https://cdn.seu-dominio.com/proofs')
+)
+STORAGE_URL_BASE = os.getenv('STORAGE_URL_BASE', default_storage_base)
 
 # SMTP configuration
 SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
@@ -185,9 +223,12 @@ PIX_WEBHOOK_SECRET = os.getenv('PIX_WEBHOOK_SECRET')
 
 # Application Configuration
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:8000').split(',')
-SUCCESS_URL = os.getenv('SUCCESS_URL', 'http://localhost:8000/success')
-CANCEL_URL = os.getenv('CANCEL_URL', 'http://localhost:8000/cancel')
-WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'http://localhost:5001/api/webhook')
+default_success = f"{APP_BASE_URL.rstrip('/')}/success" if APP_BASE_URL else 'http://localhost:8000/success'
+default_cancel = f"{APP_BASE_URL.rstrip('/')}/cancel" if APP_BASE_URL else 'http://localhost:8000/cancel'
+SUCCESS_URL = os.getenv('SUCCESS_URL', default_success)
+CANCEL_URL = os.getenv('CANCEL_URL', default_cancel)
+default_webhook = f"{APP_BASE_URL.rstrip('/')}/api/webhook" if APP_BASE_URL else f"http://127.0.0.1:{INTERNAL_PORT}/api/webhook"
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', default_webhook)
 
 # Serial generation configuration
 SECRET_KEY = "HackintoshAndBeyond2024!"  # Should match the Swift app
@@ -4407,16 +4448,18 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"⚠️ Erro ao iniciar confirmação automática: {e}")
     
-    # Get port from environment (Railway sets this automatically)
-    port = int(os.getenv('PORT', 8080))
-    debug = os.getenv('DEBUG', 'False').lower() == 'true'
+    # Get port from environment (Render/Railway set this automatically)
+    port = INTERNAL_PORT
+    debug_default = 'false' if IS_RENDER else 'true'
+    debug = os.getenv('DEBUG', debug_default).lower() == 'true'
     
     print(f"🚀 Server starting on port: {port}")
     print(f"🔧 Debug mode: {debug}")
     _log_routes_on_start()
     
     # Prefer WSGI server when available
-    use_gunicorn = os.getenv('USE_GUNICORN', 'false').lower() == 'true'
+    gunicorn_default = 'true' if IS_RENDER else 'false'
+    use_gunicorn = os.getenv('USE_GUNICORN', gunicorn_default).lower() == 'true'
     if use_gunicorn:
         try:
             from gunicorn.app.wsgiapp import WSGIApplication

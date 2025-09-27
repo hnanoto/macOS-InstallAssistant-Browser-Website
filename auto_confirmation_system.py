@@ -21,11 +21,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger('auto_confirmation')
 
+# Usamos o mesmo valor padrão do payment_api.py (8080) para evitar divergências
+DEFAULT_INTERNAL_PORT = os.getenv('PORT', '8080')
+DEFAULT_API_BASE_URL = (
+    os.getenv('AUTO_CONFIRMATION_API_BASE_URL')
+    or os.getenv('INTERNAL_API_BASE_URL')
+    or f"http://127.0.0.1:{DEFAULT_INTERNAL_PORT}"
+)
+
+
 class AutoConfirmationSystem:
     """Sistema de confirmação automática de pagamentos"""
-    
-    def __init__(self, api_base_url: str = "http://localhost:5001"):
-        self.api_base_url = api_base_url
+
+    def __init__(self, api_base_url: Optional[str] = None):
+        self.api_base_url = api_base_url or DEFAULT_API_BASE_URL
         self.monitoring = False
         self.monitor_thread = None
         self.confirmation_rules = {
@@ -60,7 +69,10 @@ class AutoConfirmationSystem:
             'errors': 0
         }
         
-        logger.info("🤖 Sistema de Confirmação Automática inicializado")
+        logger.info(
+            "🤖 Sistema de Confirmação Automática inicializado"
+            f" | API base: {self.api_base_url}"
+        )
     
     def start_monitoring(self):
         """Iniciar monitoramento automático"""
@@ -114,7 +126,24 @@ class AutoConfirmationSystem:
             
             if response.status_code == 200:
                 data = response.json()
-                return data.get('payments', [])
+                pending_entries = (
+                    data.get('pending_payments')
+                    or data.get('payments')
+                    or []
+                )
+
+                normalized: List[Dict] = []
+                for raw in pending_entries:
+                    if not isinstance(raw, dict):
+                        continue
+
+                    normalized.append({
+                        **raw,
+                        'id': raw.get('id') or raw.get('payment_id'),
+                        'status': raw.get('status') or raw.get('payment_status') or 'pending',
+                    })
+
+                return normalized
             else:
                 logger.warning(f"⚠️ Erro ao buscar pagamentos: {response.status_code}")
                 return []
@@ -147,10 +176,10 @@ class AutoConfirmationSystem:
         """Verificar se um pagamento deve ser confirmado automaticamente"""
         payment_method = payment.get('method', 'unknown')
         created_at_str = payment.get('created_at')
-        status = payment.get('status')
-        
+        status = (payment.get('status') or '').lower()
+
         # Só confirmar pagamentos pendentes
-        if status != 'pending':
+        if status not in {'pending', 'pending_approval'}:
             return False
         
         # Verificar se temos regras para este método
