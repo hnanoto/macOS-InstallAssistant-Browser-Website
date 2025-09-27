@@ -61,6 +61,7 @@ try:
         auto_confirmation_system,
         start_auto_confirmation,
         get_auto_confirmation_stats,
+        resolver_api_base_url,
     )
     AUTO_CONFIRMATION_ENABLED = True
     print("✅ Sistema de confirmação automática carregado com sucesso")
@@ -77,12 +78,13 @@ INTERNAL_PORT = int(os.getenv('PORT', '8080'))
 
 if AUTO_CONFIRMATION_ENABLED:
     try:
-        # Permitir sobreposição por variável de ambiente explícita
-        auto_confirmation_system.api_base_url = os.getenv(
-            'AUTO_CONFIRMATION_API_BASE_URL',
-            f"http://127.0.0.1:{INTERNAL_PORT}"
+        auto_confirmation_system.api_base_url = resolver_api_base_url(
+            os.getenv('AUTO_CONFIRMATION_API_BASE_URL')
         )
-        print(f"🤖 Auto confirmation base URL configurada: {auto_confirmation_system.api_base_url}")
+        print(
+            "🤖 Auto confirmation base URL configurada: "
+            f"{auto_confirmation_system.api_base_url}"
+        )
     except Exception as auto_cfg_error:
         print(f"⚠️ Não foi possível configurar auto confirmation base URL: {auto_cfg_error}")
 

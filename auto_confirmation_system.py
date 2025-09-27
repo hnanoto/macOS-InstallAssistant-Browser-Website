@@ -23,18 +23,48 @@ logger = logging.getLogger('auto_confirmation')
 
 # Usamos o mesmo valor padrão do payment_api.py (8080) para evitar divergências
 DEFAULT_INTERNAL_PORT = os.getenv('PORT', '8080')
-DEFAULT_API_BASE_URL = (
-    os.getenv('AUTO_CONFIRMATION_API_BASE_URL')
-    or os.getenv('INTERNAL_API_BASE_URL')
-    or f"http://127.0.0.1:{DEFAULT_INTERNAL_PORT}"
-)
+
+
+def _normalizar_base(url: Optional[str]) -> Optional[str]:
+    if not url:
+        return None
+
+    cleaned = url.strip()
+    if not cleaned:
+        return None
+
+    # Se vier apenas host:porta, prefixamos http
+    if '://' not in cleaned:
+        cleaned = f"http://{cleaned}"
+
+    return cleaned.rstrip('/')
+
+
+def resolver_api_base_url(preferida: Optional[str] = None) -> str:
+    """Descobre a melhor URL base para consultar a API principal."""
+
+    candidatos = [
+        preferida,
+        os.getenv('AUTO_CONFIRMATION_API_BASE_URL'),
+        os.getenv('INTERNAL_API_BASE_URL'),
+        os.getenv('APP_BASE_URL'),
+        os.getenv('RENDER_EXTERNAL_URL'),
+        f"127.0.0.1:{DEFAULT_INTERNAL_PORT}",
+    ]
+
+    for candidato in candidatos:
+        normalizado = _normalizar_base(candidato)
+        if normalizado:
+            return normalizado
+
+    return f"http://127.0.0.1:{DEFAULT_INTERNAL_PORT}"
 
 
 class AutoConfirmationSystem:
     """Sistema de confirmação automática de pagamentos"""
 
     def __init__(self, api_base_url: Optional[str] = None):
-        self.api_base_url = api_base_url or DEFAULT_API_BASE_URL
+        self.api_base_url = resolver_api_base_url(api_base_url)
         self.monitoring = False
         self.monitor_thread = None
         self.confirmation_rules = {
