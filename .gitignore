@@ -12,9 +12,9 @@
 !.nojekyll
 !_config.yml
 
-# Pasta downloads - APENAS o DMG deve ser público
+# Pasta downloads - DMG e arquivos relacionados devem ser públicos
 !downloads/
-!downloads/index.html
+!downloads/*.html
 !downloads/README.md
 !downloads/*.dmg
 
